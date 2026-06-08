@@ -403,12 +403,7 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-[#f8fafc]" id="app-root-view">
       {/* ⚠️ MOCK INTEGRATIVE SIMULATION HEADER CONTROLLER */}
-      <div className="bg-slate-900 text-slate-100 py-2.5 px-4 font-sans text-xs flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 shrink-0">
-        <div className="flex items-center gap-1.5 font-medium">
-          <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span className="text-[11px] text-slate-300">Bộ giả lập phân luồng thử nghiệm:</span>
-        </div>
-
+      <div className="bg-slate-900 text-slate-100 py-2.5 px-4 font-sans text-xs flex flex-wrap items-center justify-end gap-3 border-b border-slate-800 shrink-0">
         <div className="flex items-center gap-2">
           <button
             onClick={() => {
@@ -422,7 +417,7 @@ export default function App() {
             }`}
           >
             <UserCheck className="w-3.5 h-3.5" />
-            Vị thế: Phụ huynh ({parentApps.length} đơn)
+            Đăng ký xét tuyển ({parentApps.length} đơn)
           </button>
 
           <button
@@ -441,7 +436,7 @@ export default function App() {
             }`}
           >
             <Settings className="w-3.5 h-3.5" />
-            Vị thế: Hội đồng tuyển sinh (Admin)
+            Hội đồng tuyển sinh (Admin)
           </button>
         </div>
       </div>

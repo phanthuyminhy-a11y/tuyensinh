@@ -142,7 +142,7 @@ export default function AdminPanel({
       return;
     }
 
-    // Header row for CSV Excel file with clear labels
+    // Header row for CSV Excel file with clear labels matching the requested image exactly
     const headers = [
       "STT",
       "Mã hồ sơ",
@@ -153,12 +153,10 @@ export default function AdminPanel({
       "Địa chỉ cư trú",
       "Họ tên cha/mẹ",
       "Số điện thoại",
-      "Email liên hệ",
+      "Email liên",
       "Trạng thái tuyển sinh",
-      "Ảnh chân dung 3x4 (URL)",
-      "Giấy khai sinh học sinh (URL)",
-      "Xác nhận cư trú / VNeID (URL)",
-      "Ghi chú của Hội đồng",
+      "Xác nhận",
+      "Ghi chú cử",
       "Ngày nộp hồ sơ"
     ];
 
@@ -188,9 +186,7 @@ export default function AdminPanel({
         app.parentPhone,
         app.parentEmail || "",
         app.status,
-        app.avatarUrl || "Chưa nộp hoặc không yêu cầu",
-        app.birthCertUrl || "Chưa nộp hoặc không yêu cầu",
-        app.residenceCertUrl || "Chưa nộp hoặc không yêu cầu",
+        app.status === ApplicationStatus.ACCEPTED ? "Đã xác nhận" : "Chưa xác nhận",
         (app.statusNotes || "").replace(/[",\n\r]/g, " "),
         regDateStr
       ];
