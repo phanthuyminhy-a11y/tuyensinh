@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Custom Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(resData) {
+      return isSignedIn() && resData.createdBy == request.auth.uid;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == "giaoanlop4chantroi@gmail.com"
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_-]+$');
+    }
+
+    function isValidApplication(data) {
+      return data.studentName is string &&
+             data.gender in ['Nam', 'Nữ'] &&
+             data.birthDate is string &&
+             data.status in ['Chờ duyệt', 'Đang xử lý', 'Yêu cầu bổ sung', 'Đã tiếp nhận', 'Từ chối'];
+    }
+
+    match /applications/{applicationId} {
+      // Anyone can query or get a specific document to support simulation tracking and searches.
+      allow read: if true;
+      
+      // Permit creation of applications with status 'Chờ duyệt' and valid structure.
+      allow create: if isValidId(applicationId) && 
+                    request.resource.data.status == "Chờ duyệt" &&
+                    isValidApplication(request.resource.data);
+
+      // Support updates (field updates from parents, status updates from admin) with valid structure.
+      allow update: if isValidId(applicationId) &&
+                    isValidApplication(request.resource.data);
+
+      // Support deletion of applications in simulation context or by admin.
+      allow delete: if isValidId(applicationId);
+    }
+
+    match /announcements/{announcementId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

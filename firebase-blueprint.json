@@ -1,0 +1,138 @@
+{
+  "entities": {
+    "AdmissionApplication": {
+      "title": "Admission Application",
+      "description": "An online registration application submitted by a parent for primary school admission.",
+      "type": "object",
+      "properties": {
+        "studentName": {
+          "type": "string",
+          "description": "Full name of the student."
+        },
+        "gender": {
+          "type": "string",
+          "enum": ["Nam", "Nữ"],
+          "description": "Student's gender."
+        },
+        "birthDate": {
+          "type": "string",
+          "format": "date",
+          "description": "Student's date of birth in YYYY-MM-DD."
+        },
+        "birthPlace": {
+          "type": "string",
+          "description": "Student's place of birth."
+        },
+        "address": {
+          "type": "string",
+          "description": "Permanent residence address."
+        },
+        "parentName": {
+          "type": "string",
+          "description": "Full name of the father, mother, or guardian."
+        },
+        "parentPhone": {
+          "type": "string",
+          "description": "Contact phone number of the parent."
+        },
+        "parentEmail": {
+          "type": "string",
+          "description": "Contact email address of the parent."
+        },
+        "avatarUrl": {
+          "type": "string",
+          "description": "Base64 or URL profile picture of the student."
+        },
+        "birthCertUrl": {
+          "type": "string",
+          "description": "Base64 or URL of the birth certificate document."
+        },
+        "residenceCertUrl": {
+          "type": "string",
+          "description": "Base64 or URL of proof of residence document."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Chờ duyệt", "Đang xử lý", "Yêu cầu bổ sung", "Đã tiếp nhận", "Từ chối"],
+          "description": "Real-time verification status of the admission application."
+        },
+        "statusNotes": {
+          "type": "string",
+          "description": "Official comments from the admissions board regarding actions or feedback."
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "UID of the user who submitted this registration."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "System timestamp when application was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "System timestamp when status or records were updated."
+        },
+        "applicationCode": {
+          "type": "string",
+          "description": "Unique registration code, e.g. RC-2026-XXXXX"
+        }
+      },
+      "required": [
+        "studentName",
+        "gender",
+        "birthDate",
+        "birthPlace",
+        "address",
+        "parentName",
+        "parentPhone",
+        "parentEmail",
+        "status",
+        "applicationCode",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SchoolAnnouncement": {
+      "title": "School Announcement",
+      "description": "Administrative announcements, registration guidelines, or news for parents.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Header title of the post."
+        },
+        "content": {
+          "type": "string",
+          "description": "Markdown text content."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Thông báo", "Hướng dẫn", "Lịch tuyển sinh"],
+          "description": "Type of announcement page."
+        },
+        "publishedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the announcement was published."
+        },
+        "important": {
+          "type": "boolean",
+          "description": "Whether to pin the announcement as high-priority."
+        }
+      },
+      "required": ["title", "content", "category", "publishedAt"]
+    }
+  },
+  "firestore": {
+    "/applications/{applicationId}": {
+      "schema": "AdmissionApplication",
+      "description": "Admissions applications indexed by unique ID."
+    },
+    "/announcements/{announcementId}": {
+      "schema": "SchoolAnnouncement",
+      "description": "School announcement and guidelines database."
+    }
+  }
+}
