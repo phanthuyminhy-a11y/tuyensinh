@@ -11,6 +11,49 @@ import ApplicationTracker from "./components/ApplicationTracker";
 import AdminPanel from "./components/AdminPanel";
 import AIAssistant from "./components/AIAssistant";
 
+const seedApps: AdmissionApplication[] = [
+  {
+    id: "app_53812_demo",
+    applicationCode: "RC-2026-53812",
+    studentName: "Trần Minh Khang",
+    gender: "Nam",
+    birthDate: "2020-08-20",
+    birthPlace: "Trạm y tế xã Nguyễn Việt Khái",
+    address: "Ấp Rạch Chèo, Xã Nguyễn Việt Khái, Tỉnh Cà Mau",
+    parentName: "Trần Anh Tuấn",
+    parentPhone: "0944123XXX",
+    parentEmail: "phuhuynh.tuan.demo@gmail.com",
+    avatarUrl: "https://images.unsplash.com/photo-1595152772835-219674b2a8a6?w=150",
+    birthCertUrl: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=300",
+    residenceCertUrl: "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=300",
+    status: ApplicationStatus.PENDING,
+    statusNotes: "Hồ sơ của bé đang được kiểm tra hành chính sơ bộ đối soát số định danh.",
+    createdBy: "demo_parent_user",
+    createdAt: new Date("2026-06-07T12:00:00Z"),
+    updatedAt: new Date("2026-06-07T12:00:00Z"),
+  },
+  {
+    id: "app_19204_demo",
+    applicationCode: "RC-2026-19204",
+    studentName: "Lê Thị Mai Thy",
+    gender: "Nữ",
+    birthDate: "2020-11-04",
+    birthPlace: "Trạm y tế xã Nguyễn Việt Khái, Cà Mau",
+    address: "Ấp Mương Đào B, Xã Nguyễn Việt Khái, Tỉnh Cà Mau",
+    parentName: "Lê Văn Hợp",
+    parentPhone: "0987654XXX",
+    parentEmail: "phuhuynh.hop.demo@gmail.com",
+    avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150",
+    birthCertUrl: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=300",
+    residenceCertUrl: "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=300",
+    status: ApplicationStatus.ACTION_REQUIRED,
+    statusNotes: "Ảnh quét Xác nhận cư trú bị mờ nhòe chữ bên dưới. Vui lòng cập nhật tờ khai số hoặc chụp bổ sung bản ảnh khác thay thế rõ hơn.",
+    createdBy: "demo_parent_user_2",
+    createdAt: new Date("2026-06-04T12:00:00Z"),
+    updatedAt: new Date("2026-06-08T18:00:00Z"),
+  },
+];
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<"news" | "register" | "track" | "ai">("register");
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -101,6 +144,14 @@ export default function App() {
   const [isAnnouncementsSeeded, setIsAnnouncementsSeeded] = useState<boolean>(() => {
     try {
       return localStorage.getItem("RachCheo_Announcements_Seeded") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  const [isApplicationsSeeded, setIsApplicationsSeeded] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("RachCheo_Applications_Seeded") === "true";
     } catch {
       return false;
     }
@@ -221,7 +272,8 @@ export default function App() {
           contactHotline: getLocalStorageItem("RachCheo_ContactHotline", "0290.3888.222") as string,
           contactEmail: getLocalStorageItem("RachCheo_ContactEmail", "th.rachcheo@phutun.edu.vn") as string,
           contactAddress: getLocalStorageItem("RachCheo_ContactAddress", "Ấp Rạch Chèo, Xã Nguyễn Việt Khái, Tỉnh Cà Mau") as string,
-          isAnnouncementsSeeded: false
+          isAnnouncementsSeeded: false,
+          isApplicationsSeeded: false
         };
 
         if (snapshot.exists()) {
@@ -265,6 +317,26 @@ export default function App() {
             seedAnnouncements();
           }
 
+          // If applications are not seeded in Firestore, seed them now so they live in the DB and are deletable
+          if (!data.isApplicationsSeeded) {
+            const seedApplicationsNow = async () => {
+              try {
+                for (const app of seedApps) {
+                  await setDoc(doc(db, "applications", app.id), app);
+                }
+                await setDoc(configDocRef, { isApplicationsSeeded: true }, { merge: true });
+                try {
+                  localStorage.setItem("RachCheo_Applications_Seeded", "true");
+                } catch (e) {
+                  console.warn(e);
+                }
+              } catch (e) {
+                console.error("Failed to seed default applications:", e);
+              }
+            };
+            seedApplicationsNow();
+          }
+
           if (needsSelfHeal) {
             // Write the missing fields back to Firestore so the document is complete
             setDoc(configDocRef, missingPayload, { merge: true }).catch((err) => {
@@ -284,6 +356,7 @@ export default function App() {
           const finalEmail = data.contactEmail || defaults.contactEmail;
           const finalAddress = data.contactAddress || defaults.contactAddress;
           const finalAnnouncementsSeeded = data.isAnnouncementsSeeded !== undefined ? !!data.isAnnouncementsSeeded : false;
+          const finalApplicationsSeeded = data.isApplicationsSeeded !== undefined ? !!data.isApplicationsSeeded : false;
 
           setAdminPassword(finalPassword);
           setIsRegistrationOpen(finalRegOpen);
@@ -295,6 +368,7 @@ export default function App() {
           setContactEmail(finalEmail);
           setContactAddress(finalAddress);
           setIsAnnouncementsSeeded(finalAnnouncementsSeeded);
+          setIsApplicationsSeeded(finalApplicationsSeeded);
 
           // Update sync status indicator
           setIsSyncConnected(true);
@@ -312,6 +386,7 @@ export default function App() {
             localStorage.setItem("RachCheo_ContactEmail", finalEmail);
             localStorage.setItem("RachCheo_ContactAddress", finalAddress);
             localStorage.setItem("RachCheo_Announcements_Seeded", String(finalAnnouncementsSeeded));
+            localStorage.setItem("RachCheo_Applications_Seeded", String(finalApplicationsSeeded));
           } catch (e) {
             console.warn("Storage client-side caching failed:", e);
           }
@@ -353,50 +428,6 @@ export default function App() {
   useEffect(() => {
     setAppsLoading(true);
 
-    // Fallback seed apps to make the portal immediately functional and premium-looking
-    const seedApps: AdmissionApplication[] = [
-      {
-        id: "app_53812_demo",
-        applicationCode: "RC-2026-53812",
-        studentName: "Trần Minh Khang",
-        gender: "Nam",
-        birthDate: "2020-08-20",
-        birthPlace: "Trạm y tế xã Nguyễn Việt Khái",
-        address: "Ấp Rạch Chèo, Xã Nguyễn Việt Khái, Tỉnh Cà Mau",
-        parentName: "Trần Anh Tuấn",
-        parentPhone: "0944123XXX",
-        parentEmail: "phuhuynh.tuan.demo@gmail.com",
-        avatarUrl: "https://images.unsplash.com/photo-1595152772835-219674b2a8a6?w=150",
-        birthCertUrl: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=300",
-        residenceCertUrl: "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=300",
-        status: ApplicationStatus.PENDING,
-        statusNotes: "Hồ sơ của bé đang được kiểm tra hành chính sơ bộ đối soát số định danh.",
-        createdBy: "demo_parent_user",
-        createdAt: new Date(Date.now() - 3600000 * 24 * 2), // 2 days ago
-        updatedAt: new Date(Date.now() - 3600000 * 24 * 2),
-      },
-      {
-        id: "app_19204_demo",
-        applicationCode: "RC-2026-19204",
-        studentName: "Lê Thị Mai Thy",
-        gender: "Nữ",
-        birthDate: "2020-11-04",
-        birthPlace: "Trạm y tế xã Nguyễn Việt Khái, Cà Mau",
-        address: "Ấp Mương Đào B, Xã Nguyễn Việt Khái, Tỉnh Cà Mau",
-        parentName: "Lê Văn Hợp",
-        parentPhone: "0987654XXX",
-        parentEmail: "phuhuynh.hop.demo@gmail.com",
-        avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150",
-        birthCertUrl: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=300",
-        residenceCertUrl: "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=300",
-        status: ApplicationStatus.ACTION_REQUIRED,
-        statusNotes: "Ảnh quét Xác nhận cư trú bị mờ nhòe chữ bên dưới. Vui lòng cập nhật tờ khai số hoặc chụp bổ sung bản ảnh khác thay thế rõ hơn.",
-        createdBy: "demo_parent_user_2",
-        createdAt: new Date(Date.now() - 3600000 * 24 * 5), // 5 days ago
-        updatedAt: new Date(Date.now() - 3600000 * 12), // 12 hours ago
-      },
-    ];
-
     try {
       // Query standard Firestore applications path collection
       const q = query(collection(db, "applications"));
@@ -406,13 +437,15 @@ export default function App() {
           fetchedList.push(doc.data() as AdmissionApplication);
         });
 
-        // Merge standard database items with demo items for complete preview data completeness
+        // Merge standard database items with demo items for complete preview data completeness ONLY if not seeded yet
         const combined = [...fetchedList];
-        seedApps.forEach((demoApp) => {
-          if (!combined.some((a) => a.id === demoApp.id)) {
-            combined.push(demoApp);
-          }
-        });
+        if (!isApplicationsSeeded) {
+          seedApps.forEach((demoApp) => {
+            if (!combined.some((a) => a.id === demoApp.id)) {
+              combined.push(demoApp);
+            }
+          });
+        }
 
         // Sort by creation time newest first
         combined.sort((a, b) => {
@@ -429,12 +462,12 @@ export default function App() {
         if (localData) {
           try {
             const parsed = JSON.parse(localData);
-            setApplications([...parsed, ...seedApps]);
+            setApplications(isApplicationsSeeded ? parsed : [...parsed, ...seedApps]);
           } catch {
-            setApplications(seedApps);
+            setApplications(isApplicationsSeeded ? [] : seedApps);
           }
         } else {
-          setApplications(seedApps);
+          setApplications(isApplicationsSeeded ? [] : seedApps);
         }
         setAppsLoading(false);
       });
@@ -442,10 +475,10 @@ export default function App() {
       return () => unsubscribe();
     } catch (err) {
       console.error("Firestore onSnapshot subscription initialization failed:", err);
-      setApplications(seedApps);
+      setApplications(isApplicationsSeeded ? [] : seedApps);
       setAppsLoading(false);
     }
-  }, []);
+  }, [isApplicationsSeeded]);
 
   // Real-time synchronization of the announcements database from Firestore
   useEffect(() => {
