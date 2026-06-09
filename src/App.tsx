@@ -4,55 +4,14 @@ import { ApplicationStatus, AdmissionApplication, SchoolAnnouncement } from "./t
 import { defaultAnnouncements } from "./data/defaultAnnouncements";
 import { db, auth, handleFirestoreError, OperationType } from "./firebase";
 import { signInAnonymously, onAuthStateChanged, signOut, User as FirebaseUser } from "firebase/auth";
-import { collection, onSnapshot, query, getDocs, doc, setDoc } from "firebase/firestore";
+import { collection, onSnapshot, query, getDocs, doc, setDoc, deleteDoc } from "firebase/firestore";
 
 import ApplicationForm from "./components/ApplicationForm";
 import ApplicationTracker from "./components/ApplicationTracker";
 import AdminPanel from "./components/AdminPanel";
 import AIAssistant from "./components/AIAssistant";
 
-const seedApps: AdmissionApplication[] = [
-  {
-    id: "app_53812_demo",
-    applicationCode: "RC-2026-53812",
-    studentName: "Trần Minh Khang",
-    gender: "Nam",
-    birthDate: "2020-08-20",
-    birthPlace: "Trạm y tế xã Nguyễn Việt Khái",
-    address: "Ấp Rạch Chèo, Xã Nguyễn Việt Khái, Tỉnh Cà Mau",
-    parentName: "Trần Anh Tuấn",
-    parentPhone: "0944123XXX",
-    parentEmail: "phuhuynh.tuan.demo@gmail.com",
-    avatarUrl: "https://images.unsplash.com/photo-1595152772835-219674b2a8a6?w=150",
-    birthCertUrl: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=300",
-    residenceCertUrl: "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=300",
-    status: ApplicationStatus.PENDING,
-    statusNotes: "Hồ sơ của bé đang được kiểm tra hành chính sơ bộ đối soát số định danh.",
-    createdBy: "demo_parent_user",
-    createdAt: new Date("2026-06-07T12:00:00Z"),
-    updatedAt: new Date("2026-06-07T12:00:00Z"),
-  },
-  {
-    id: "app_19204_demo",
-    applicationCode: "RC-2026-19204",
-    studentName: "Lê Thị Mai Thy",
-    gender: "Nữ",
-    birthDate: "2020-11-04",
-    birthPlace: "Trạm y tế xã Nguyễn Việt Khái, Cà Mau",
-    address: "Ấp Mương Đào B, Xã Nguyễn Việt Khái, Tỉnh Cà Mau",
-    parentName: "Lê Văn Hợp",
-    parentPhone: "0987654XXX",
-    parentEmail: "phuhuynh.hop.demo@gmail.com",
-    avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150",
-    birthCertUrl: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=300",
-    residenceCertUrl: "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=300",
-    status: ApplicationStatus.ACTION_REQUIRED,
-    statusNotes: "Ảnh quét Xác nhận cư trú bị mờ nhòe chữ bên dưới. Vui lòng cập nhật tờ khai số hoặc chụp bổ sung bản ảnh khác thay thế rõ hơn.",
-    createdBy: "demo_parent_user_2",
-    createdAt: new Date("2026-06-04T12:00:00Z"),
-    updatedAt: new Date("2026-06-08T18:00:00Z"),
-  },
-];
+const seedApps: AdmissionApplication[] = [];
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<"news" | "register" | "track" | "ai">("register");
@@ -243,6 +202,19 @@ export default function App() {
       }
     });
     return () => unsubscribe();
+  }, []);
+
+  // Force delete demo/mock students permanently from Firestore
+  useEffect(() => {
+    const handleCleanupDemoDocs = async () => {
+      try {
+        await deleteDoc(doc(db, "applications", "app_53812_demo"));
+        await deleteDoc(doc(db, "applications", "app_19204_demo"));
+      } catch (err) {
+        console.warn("Silent clean demo docs error:", err);
+      }
+    };
+    handleCleanupDemoDocs();
   }, []);
 
   // Real-time synchronization of global administrative configurations and password from Firestore
