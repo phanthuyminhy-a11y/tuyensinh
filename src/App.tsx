@@ -187,16 +187,28 @@ export default function App() {
     try {
       const configDocRef = doc(db, "settings", "config");
       const unsubscribe = onSnapshot(configDocRef, (snapshot) => {
+        const getLocalStorageItem = (key: string, fallback: string | boolean | number) => {
+          try {
+            const val = localStorage.getItem(key);
+            if (val === null) return fallback;
+            if (typeof fallback === "boolean") return val !== "false";
+            if (typeof fallback === "number") return Number(val) || fallback;
+            return val;
+          } catch {
+            return fallback;
+          }
+        };
+
         const defaults = {
-          adminPassword: "admin123",
-          isRegistrationOpen: true,
-          enrollmentQuota: 120,
-          reqAvatar: "required" as const,
-          reqBirthCert: "required" as const,
-          reqResidenceCert: "required" as const,
-          contactHotline: "0290.3888.222",
-          contactEmail: "th.rachcheo@phutun.edu.vn",
-          contactAddress: "Ấp Rạch Chèo, Xã Nguyễn Việt Khái, Tỉnh Cà Mau"
+          adminPassword: getLocalStorageItem("RachCheo_AdminPassword", "admin123") as string,
+          isRegistrationOpen: getLocalStorageItem("RachCheo_IsRegistrationOpen", true) as boolean,
+          enrollmentQuota: getLocalStorageItem("RachCheo_EnrollmentQuota", 120) as number,
+          reqAvatar: getLocalStorageItem("RachCheo_ReqAvatar", "required") as "required" | "optional" | "hidden",
+          reqBirthCert: getLocalStorageItem("RachCheo_ReqBirthCert", "required") as "required" | "optional" | "hidden",
+          reqResidenceCert: getLocalStorageItem("RachCheo_ReqResidenceCert", "required") as "required" | "optional" | "hidden",
+          contactHotline: getLocalStorageItem("RachCheo_ContactHotline", "0290.3888.222") as string,
+          contactEmail: getLocalStorageItem("RachCheo_ContactEmail", "th.rachcheo@phutun.edu.vn") as string,
+          contactAddress: getLocalStorageItem("RachCheo_ContactAddress", "Ấp Rạch Chèo, Xã Nguyễn Việt Khái, Tỉnh Cà Mau") as string
         };
 
         if (snapshot.exists()) {
