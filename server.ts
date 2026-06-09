@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -31,7 +31,81 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json());
+  app.use(express.json({ limit: "10mb" }));
+
+  // API Route: AI Birth Certificate Image Verification
+  app.post("/api/gemini/verify-birth-cert", async (req, res) => {
+    try {
+      const { image, mimeType = "image/jpeg" } = req.body;
+      if (!image) {
+        return res.status(400).json({ isValid: false, reason: "Không tìm thấy dữ liệu hình ảnh đính kèm để đối hợp." });
+      }
+
+      // Strip data URL prefixes if present
+      let base64Data = image;
+      if (base64Data.startsWith("data:")) {
+        base64Data = base64Data.split(",")[1];
+      }
+
+      const ai = getGeminiClient();
+
+      const imagePart = {
+        inlineData: {
+          mimeType,
+          data: base64Data,
+        },
+      };
+
+      const promptString = `
+Bạn là Hệ thống kiểm duyệt và đối đối chiếu hồ sơ tuyển sinh tự động của Trường Tiểu Học Rạch Chèo.
+Nhiệm vụ của bạn là thẩm định dữ liệu hình ảnh được cung cấp xem có đúng thực tế là "Giấy khai sinh" (Bản chính, Bản sao, hoặc Trích lục khai sinh) của Việt Nam hay không.
+
+Hãy phân tích kỹ các yếu tố đặc trưng bắt buộc của Giấy khai sinh/Trích lục khai sinh Việt Nam:
+1. Có tiêu ngữ Quốc gia nổi bật ở đầu trang: "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM" và "Độc lập - Tự do - Hạnh phúc".
+2. Có tiêu đề lớn viết hoa rõ ràng: "GIẤY KHAI SINH" (hoặc "BẢN SAO", "TRÍCH LỤC KHAI SINH", "TRÍCH LỤC KHAI SINH (BẢN SAO)").
+3. Có cấu trúc các dòng thông tin điển hình chứa: "Họ, chữ đệm, tên" / "Họ và tên", "Ngày, tháng, năm sinh", "Giới tính", "Nơi sinh", "Quốc tịch", "Quê quán", "Dân tộc", "Họ, chữ đệm, tên cha", "Họ, chữ đệm, tên mẹ", "Người đi khai sinh", "Nơi đăng ký khai sinh", v.v.
+
+Trả về kết quả chuẩn xác dưới định dạng JSON khớp hoàn toàn với cấu trúc sau:
+{
+  "isValid": boolean (true nếu ảnh đúng dạng Giấy khai sinh/Trích lục khai sinh của Việt Nam; false trong các trường hợp tải sai tài liệu như Căn cước công dân, Hộ chiếu, bằng lái xe, ảnh phong cảnh, ảnh chụp chân dung em bé đơn thuần, văn bản hợp đồng khác, hoặc ảnh ngẫu nhiên không có tiêu chí của giấy khai sinh),
+  "reason": "Chuỗi văn bản tiếng Việt ngắn gọn giải tích rõ vì sao ảnh hợp lệ hay không hợp lệ để phụ huynh biết cách điều chỉnh (ví dụ: 'Giấy khai sinh bản sao hợp lệ, có tiêu ngữ và đóng dấu đỏ trích lục.' hoặc 'Ảnh tải lên không phải Giấy khai sinh mà là thẻ Căn cước công dân. Quý phụ huynh vui lòng chụp và tải lên đúng ảnh Giấy khai sinh.')"
+}
+`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: [imagePart, { text: promptString }],
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              isValid: {
+                type: Type.BOOLEAN,
+                description: "Trạng thái xác thực ảnh đúng là Giấy khai sinh Việt Nam.",
+              },
+              reason: {
+                type: Type.STRING,
+                description: "Lý do thẩm định ngắn gọn súc tích bằng tiếng Việt.",
+              },
+            },
+            required: ["isValid", "reason"],
+          },
+        },
+      });
+
+      const responseText = response.text || "{}";
+      const result = JSON.parse(responseText.trim());
+      res.json(result);
+    } catch (error) {
+      console.error("Gemini Verification API server error:", error);
+      res.status(500).json({
+        isValid: false,
+        reason: "Hệ thống kiểm duyệt AI quá tải hoặc gặp lỗi kết nối. Tuy nhiên, quý phụ huynh vui lòng chụp rõ nét đúng Giấy khai sinh để tránh bị ban tuyển sinh từ chối khi duyệt trực tiếp.",
+        details: error instanceof Error ? error.message : "Internal error",
+      });
+    }
+  });
 
   // API Route: AI Admission Assistant for parents
   app.post("/api/gemini/chat", async (req, res) => {

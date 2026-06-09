@@ -44,6 +44,11 @@ export default function ApplicationForm({
   const [birthCertName, setBirthCertName] = useState("");
   const [residenceCertName, setResidenceCertName] = useState("");
 
+  // AI Birth certificate verification states
+  const [isVerifyingBirthCert, setIsVerifyingBirthCert] = useState(false);
+  const [birthCertError, setBirthCertError] = useState("");
+  const [birthCertVerified, setBirthCertVerified] = useState(false);
+
   // Check if student born in 2020 (6 years old in 2026 school portal year)
   const getBirthYearStatus = () => {
     if (!birthDate) return null;
@@ -51,6 +56,48 @@ export default function ApplicationForm({
       isValid: true,
       message: "Độ tuổi tự do hợp lệ (Hội đồng chấp nhận tuyển sinh không hạn chế độ tuổi)."
     };
+  };
+
+  const verifyAndSetBirthCert = (base64String: string, fileName: string) => {
+    setIsVerifyingBirthCert(true);
+    setBirthCertError("");
+    setBirthCertVerified(false);
+
+    fetch("/api/gemini/verify-birth-cert", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image: base64String })
+    })
+    .then(res => {
+      if (!res.ok) {
+        throw new Error("Mã trạng thái phản hồi không hợp lệ");
+      }
+      return res.json();
+    })
+    .then(data => {
+      if (data.isValid) {
+        setBirthCertUrl(base64String);
+        setBirthCertName(fileName);
+        setBirthCertVerified(true);
+        setBirthCertError("");
+      } else {
+        setBirthCertError(data.reason || "Hình ảnh tải lên không đúng dạng Giấy khai sinh của Việt Nam.");
+        setBirthCertUrl("");
+        setBirthCertName("");
+        setBirthCertVerified(false);
+      }
+    })
+    .catch(err => {
+      console.error("Lỗi đối chiếu kiểm duyệt AI:", err);
+      // Fallback gracefully so parents are not completely locked down
+      setBirthCertUrl(base64String);
+      setBirthCertName(fileName);
+      setBirthCertVerified(false);
+      setBirthCertError("Hệ thống không thể kết nối xử lý đối chiếu AI lúc này. Hồ sơ đăng ký sẽ được Hội đồng nhà trường đối chiếu thủ công.");
+    })
+    .finally(() => {
+      setIsVerifyingBirthCert(false);
+    });
   };
 
   const handleFileReader = (file: File, type: "avatar" | "birth" | "residence") => {
@@ -87,8 +134,7 @@ export default function ApplicationForm({
               setAvatarUrl(compressedBase64);
               setAvatarName(file.name);
             } else if (type === "birth") {
-              setBirthCertUrl(compressedBase64);
-              setBirthCertName(file.name);
+              verifyAndSetBirthCert(compressedBase64, file.name);
             } else if (type === "residence") {
               setResidenceCertUrl(compressedBase64);
               setResidenceCertName(file.name);
@@ -99,8 +145,7 @@ export default function ApplicationForm({
               setAvatarUrl(base64String);
               setAvatarName(file.name);
             } else if (type === "birth") {
-              setBirthCertUrl(base64String);
-              setBirthCertName(file.name);
+              verifyAndSetBirthCert(base64String, file.name);
             } else if (type === "residence") {
               setResidenceCertUrl(base64String);
               setResidenceCertName(file.name);
@@ -113,8 +158,7 @@ export default function ApplicationForm({
             setAvatarUrl(base64String);
             setAvatarName(file.name);
           } else if (type === "birth") {
-            setBirthCertUrl(base64String);
-            setBirthCertName(file.name);
+            verifyAndSetBirthCert(base64String, file.name);
           } else if (type === "residence") {
             setResidenceCertUrl(base64String);
             setResidenceCertName(file.name);
@@ -126,8 +170,7 @@ export default function ApplicationForm({
           setAvatarUrl(base64String);
           setAvatarName(file.name);
         } else if (type === "birth") {
-          setBirthCertUrl(base64String);
-          setBirthCertName(file.name);
+          verifyAndSetBirthCert(base64String, file.name);
         } else if (type === "residence") {
           setResidenceCertUrl(base64String);
           setResidenceCertName(file.name);
@@ -156,6 +199,10 @@ export default function ApplicationForm({
 
     setResidenceCertUrl("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='140' viewBox='0 0 100 140'><rect width='100' height='140' fill='%23f1f5f9'/><text x='50%' y='50%' font-size='8' text-anchor='middle' fill='%2364748b' font-family='sans-serif'>[VNeID Xã Rạch Chèo]</text></svg>");
     setResidenceCertName("xac_nhan_tam_tru_vneid.png");
+
+    // Set demo states properly bypass
+    setBirthCertVerified(true);
+    setBirthCertError("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -167,7 +214,17 @@ export default function ApplicationForm({
 
     // Kiểm tra cấu hình bắt buộc nộp hồ sơ đính kèm số hóa
     if (reqBirthCert === "required" && !birthCertUrl) {
-      setErrorMsg("Vui lòng tải lên tài liệu đính kèm: Giấy khai sinh học sinh (mục bắt buộc bắt buộc nộp).");
+      setErrorMsg("Vui lòng tải lên tài liệu đính kèm: Giấy khai sinh học sinh (mục bắt buộc nộp).");
+      return;
+    }
+
+    if (isVerifyingBirthCert) {
+      setErrorMsg("Hập thống AI vẫn đang đối chiếu thẩm định Giấy khai sinh của học sinh. Vui lòng đợi giây lát.");
+      return;
+    }
+
+    if (birthCertError && reqBirthCert === "required") {
+      setErrorMsg(`Tài liệu Giấy khai sinh hiện tại chưa hợp lệ: ${birthCertError}`);
       return;
     }
 
@@ -442,17 +499,46 @@ export default function ApplicationForm({
                   </p>
                 </div>
                 <div className="w-full mt-3">
-                  {birthCertUrl ? (
-                    <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-lg p-1.5 px-3">
-                      <span className="text-[10px] text-emerald-800 text-ellipsis overflow-hidden whitespace-nowrap max-w-[200px] font-sans">{birthCertName || "giay-khai-sinh.jpg"}</span>
-                      <button type="button" onClick={() => setBirthCertUrl("")} className="text-[10px] text-rose-500 hover:underline">Xoá</button>
+                  {isVerifyingBirthCert ? (
+                    <div className="flex flex-col items-center justify-center gap-2 bg-slate-50 border border-slate-100 rounded-lg p-3">
+                      <RefreshCw className="w-4 h-4 animate-spin text-teal-600" />
+                      <span className="text-[10px] text-slate-500 font-sans font-semibold">Trí tuệ nhân tạo (AI) đang đối chiếu ảnh Giấy khai sinh...</span>
+                    </div>
+                  ) : birthCertUrl ? (
+                    <div className="w-full space-y-2">
+                      <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-lg p-1.5 px-3">
+                        <span className="text-[10px] text-emerald-800 text-ellipsis overflow-hidden whitespace-nowrap max-w-[180px] font-sans font-medium">✓ {birthCertName || "giay-khai-sinh.jpg"}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setBirthCertUrl("");
+                            setBirthCertVerified(false);
+                            setBirthCertError("");
+                          }}
+                          className="text-[10px] text-rose-500 hover:underline cursor-pointer"
+                        >
+                          Xoá
+                        </button>
+                      </div>
+                      {birthCertVerified && (
+                        <div className="text-[9px] text-emerald-600 font-semibold text-center bg-emerald-50/50 p-1.5 rounded-lg border border-emerald-100 leading-tight">
+                          ✓ Hệ thống AI đã phê duyệt định dạng Giấy khai sinh hợp lệ.
+                        </div>
+                      )}
                     </div>
                   ) : (
-                    <label className="flex items-center justify-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-[11px] font-sans font-medium py-1.5 rounded-lg cursor-pointer transition-colors shadow-xs">
-                      <Upload className="w-3.5" />
-                      Tải ảnh lên
-                      <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleFileReader(e.target.files[0], "birth")} />
-                    </label>
+                    <div className="w-full space-y-2.5">
+                      <label className="flex items-center justify-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-[11px] font-sans font-semibold py-1.5 rounded-lg cursor-pointer transition-colors shadow-xs">
+                        <Upload className="w-3.5" />
+                        Tải ảnh Giấy khai sinh lên
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleFileReader(e.target.files[0], "birth")} />
+                      </label>
+                      {birthCertError && (
+                        <div className="bg-rose-50 border border-rose-100 text-rose-700 text-[10px] text-center p-2 rounded-lg leading-relaxed font-sans font-medium">
+                          {birthCertError}
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
