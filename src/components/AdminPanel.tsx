@@ -661,12 +661,14 @@ export default function AdminPanel({
                             important
                           };
 
-                          // Write to firestore (with fallback handling inside try block)
+                          // Write to firestore (with error handling and feedback)
                           try {
                             const docRef = doc(db, "announcements", resultDoc.id);
                             await setDoc(docRef, resultDoc);
-                          } catch (fsErr) {
-                            console.warn("Firestore update announcements skipped: offline/permissions.", fsErr);
+                          } catch (fsErr: any) {
+                            console.error("Firestore update announcements failed:", fsErr);
+                            setAnnError("❌ Lỗi lưu dữ liệu lên hệ thống (Firestore): " + (fsErr?.message || String(fsErr)));
+                            return;
                           }
 
                           const isNew = !announcements.some(a => a.id === resultDoc.id);
@@ -751,14 +753,11 @@ export default function AdminPanel({
                         onClick={async () => {
                           if (!confirm(`Quý thầy cô thực sự muốn xoá vĩnh viễn tin "${ann.title}"?`)) return;
                           try {
-                            try {
-                              await deleteDoc(doc(db, "announcements", ann.id));
-                            } catch (fsErr) {
-                              console.warn("Firestore delete blocked:", fsErr);
-                            }
+                            await deleteDoc(doc(db, "announcements", ann.id));
                             onDeleteAnnouncement?.(ann.id);
-                          } catch (err) {
-                            alert("Lỗi khi xóa");
+                          } catch (fsErr: any) {
+                            console.error("Firestore delete failed:", fsErr);
+                            alert("❌ Lỗi khi xóa từ hệ thống: " + (fsErr?.message || String(fsErr)));
                           }
                         }}
                         className="text-rose-700 hover:text-rose-900 bg-rose-50 border border-rose-100 p-1 px-2 rounded cursor-pointer transition-colors"

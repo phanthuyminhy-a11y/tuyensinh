@@ -98,6 +98,14 @@ export default function App() {
     }
   });
 
+  const [isAnnouncementsSeeded, setIsAnnouncementsSeeded] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("RachCheo_Announcements_Seeded") === "true";
+    } catch {
+      return false;
+    }
+  });
+
   // All applications pulled in real-time
   const [applications, setApplications] = useState<AdmissionApplication[]>([]);
   const [appsLoading, setAppsLoading] = useState(true);
@@ -275,6 +283,7 @@ export default function App() {
           const finalHotline = data.contactHotline || defaults.contactHotline;
           const finalEmail = data.contactEmail || defaults.contactEmail;
           const finalAddress = data.contactAddress || defaults.contactAddress;
+          const finalAnnouncementsSeeded = data.isAnnouncementsSeeded !== undefined ? !!data.isAnnouncementsSeeded : false;
 
           setAdminPassword(finalPassword);
           setIsRegistrationOpen(finalRegOpen);
@@ -285,6 +294,7 @@ export default function App() {
           setContactHotline(finalHotline);
           setContactEmail(finalEmail);
           setContactAddress(finalAddress);
+          setIsAnnouncementsSeeded(finalAnnouncementsSeeded);
 
           // Update sync status indicator
           setIsSyncConnected(true);
@@ -301,6 +311,7 @@ export default function App() {
             localStorage.setItem("RachCheo_ContactHotline", finalHotline);
             localStorage.setItem("RachCheo_ContactEmail", finalEmail);
             localStorage.setItem("RachCheo_ContactAddress", finalAddress);
+            localStorage.setItem("RachCheo_Announcements_Seeded", String(finalAnnouncementsSeeded));
           } catch (e) {
             console.warn("Storage client-side caching failed:", e);
           }
@@ -456,14 +467,12 @@ export default function App() {
           setAnnouncements(fetchedList);
           try {
             localStorage.setItem("RachCheo_Announcements", JSON.stringify(fetchedList));
-            localStorage.setItem("RachCheo_Announcements_Seeded", "true");
           } catch (e) {
             console.warn(e);
           }
         } else {
           // Check if we have seeded announcements already. If seeded, empty list is a valid deletion
-          const localSeeded = localStorage.getItem("RachCheo_Announcements_Seeded") === "true";
-          if (localSeeded) {
+          if (isAnnouncementsSeeded) {
             setAnnouncements([]);
             try {
               localStorage.setItem("RachCheo_Announcements", JSON.stringify([]));
@@ -481,7 +490,7 @@ export default function App() {
     } catch (err) {
       console.error("Firestore announcements sub error:", err);
     }
-  }, []);
+  }, [isAnnouncementsSeeded]);
 
   const handleAddAnnouncement = (newAnn: SchoolAnnouncement) => {
     const updated = [newAnn, ...announcements];
