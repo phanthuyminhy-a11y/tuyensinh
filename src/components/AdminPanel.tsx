@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import JSZip from "jszip";
-import { Users, FileDiff, CheckCircle, AlertOctagon, Edit, MessageSquare, Clipboard, ExternalLink, Calendar, Search, Plus, Trash2, Check, Bell, Settings } from "lucide-react";
+import { Users, FileDiff, CheckCircle, AlertOctagon, Edit, MessageSquare, Clipboard, ExternalLink, Calendar, Search, Plus, Trash2, Check, Bell, Settings, Eye, EyeOff } from "lucide-react";
 import { ApplicationStatus, AdmissionApplication, SchoolAnnouncement } from "../types";
 import { db, handleFirestoreError, OperationType } from "../firebase";
 import { doc, updateDoc, deleteDoc, collection, addDoc, setDoc } from "firebase/firestore";
@@ -53,7 +53,7 @@ export default function AdminPanel({
   onUpdateReqAvatar,
   onUpdateReqBirthCert,
   onUpdateReqResidenceCert,
-  adminPassword = "admin123",
+  adminPassword = "1987Dat@",
   onUpdateAdminPassword,
   isSyncConnected = false,
   syncError = null,
@@ -72,6 +72,7 @@ export default function AdminPanel({
   initialSection = "applications",
   onSectionChange,
 }: AdminPanelProps) {
+  const [showAdminPwd, setShowAdminPwd] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(
     allApplications.length > 0 ? allApplications[0].id : null
   );
@@ -867,7 +868,7 @@ export default function AdminPanel({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3">
             {/* Birth Cert Config */}
             <div className="bg-slate-50 border border-slate-100 p-3.5 rounded-xl flex flex-col justify-between gap-2.5">
               <div>
@@ -877,40 +878,6 @@ export default function AdminPanel({
               <select
                 value={reqBirthCert}
                 onChange={(e) => onUpdateReqBirthCert?.(e.target.value as "required" | "optional" | "hidden")}
-                className="w-full text-xs font-semibold bg-white border border-slate-200 hover:border-teal-500 rounded-lg p-2 outline-none cursor-pointer text-slate-700"
-              >
-                <option value="required">🔴 Bắt buộc nộp</option>
-                <option value="optional">🟡 Tùy chọn (Không bắt buộc)</option>
-                <option value="hidden">⚪ Không yêu cầu (Ẩn đi)</option>
-              </select>
-            </div>
-
-            {/* Avatar Photo Config */}
-            <div className="bg-slate-50 border border-slate-100 p-3.5 rounded-xl flex flex-col justify-between gap-2.5">
-              <div>
-                <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block">📸 Ảnh chân dung 3x4</span>
-                <p className="text-[9px] text-slate-400 mt-0.5 leading-relaxed font-sans">Ảnh chân dung đại diện để in học bạ/hồ sơ điện tử.</p>
-              </div>
-              <select
-                value={reqAvatar}
-                onChange={(e) => onUpdateReqAvatar?.(e.target.value as "required" | "optional" | "hidden")}
-                className="w-full text-xs font-semibold bg-white border border-slate-200 hover:border-teal-500 rounded-lg p-2 outline-none cursor-pointer text-slate-700"
-              >
-                <option value="required">🔴 Bắt buộc nộp</option>
-                <option value="optional">🟡 Tùy chọn (Không bắt buộc)</option>
-                <option value="hidden">⚪ Không yêu cầu (Ẩn đi)</option>
-              </select>
-            </div>
-
-            {/* Residence Cert Config */}
-            <div className="bg-slate-50 border border-slate-100 p-3.5 rounded-xl flex flex-col justify-between gap-2.5">
-              <div>
-                <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block">🛡️ Xác nhận cư trú / VNeID</span>
-                <p className="text-[9px] text-slate-400 mt-0.5 leading-relaxed font-sans">Chứng minh đúng tuyến tuyển sinh của xã Nguyễn Việt Khái.</p>
-              </div>
-              <select
-                value={reqResidenceCert}
-                onChange={(e) => onUpdateReqResidenceCert?.(e.target.value as "required" | "optional" | "hidden")}
                 className="w-full text-xs font-semibold bg-white border border-slate-200 hover:border-teal-500 rounded-lg p-2 outline-none cursor-pointer text-slate-700"
               >
                 <option value="required">🔴 Bắt buộc nộp</option>
@@ -928,8 +895,19 @@ export default function AdminPanel({
             <h4 className="text-[11px] font-bold text-amber-900 uppercase tracking-wide flex items-center gap-1.5">
               <span>🔐 Thay đổi mật khẩu Quản trị (mật khẩu truy cập hệ thống)</span>
             </h4>
-            <p className="text-[10px] text-slate-500 font-sans leading-relaxed">
-              Mật khẩu truy cập ban quản trị hiện tại là: <span className="font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200 p-0.5 px-2 rounded-md">{adminPassword}</span>. Bạn có thể thay đổi để chặn truy cập từ xa tùy ý.
+            <p className="text-[10px] text-slate-500 font-sans leading-relaxed flex items-center gap-2">
+              <span>Mật khẩu truy cập ban quản trị hiện tại là:</span>
+              <span className="font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200 p-0.5 px-2 rounded-md">
+                {showAdminPwd ? adminPassword : "••••••••"}
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowAdminPwd(!showAdminPwd)}
+                className="p-1 hover:bg-amber-100 rounded text-slate-500 hover:text-slate-700 cursor-pointer"
+                title={showAdminPwd ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+              >
+                {showAdminPwd ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
             </p>
           </div>
           <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
@@ -1133,8 +1111,8 @@ export default function AdminPanel({
                       : "bg-white border-slate-100 hover:bg-slate-50"
                   }`}
                 >
-                  <div className="w-10 h-10 bg-slate-100 border border-slate-200 rounded-lg overflow-hidden shrink-0 flex items-center justify-center">
-                    <img src={app.avatarUrl} alt="" className="w-full h-full object-cover" />
+                  <div className="w-10 h-10 bg-teal-50 border border-teal-150 rounded-lg shrink-0 flex items-center justify-center font-bold text-teal-800">
+                    {app.studentName.split(" ").pop()?.[0] || app.studentName[0]}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
@@ -1162,12 +1140,8 @@ export default function AdminPanel({
               {/* Header profile */}
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-slate-100 pb-4 gap-4">
                 <div className="flex items-center gap-4">
-                  <div
-                    onClick={() => setLightboxUrl(selectedApp.avatarUrl)}
-                    className="w-16 h-16 bg-slate-100 border border-slate-200 rounded-xl overflow-hidden cursor-zoom-in shrink-0 relative group"
-                  >
-                    <img src={selectedApp.avatarUrl} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[9px] transition-opacity font-sans font-medium"> phóng to </div>
+                  <div className="w-16 h-16 bg-teal-50 border border-teal-150 rounded-xl shrink-0 flex items-center justify-center font-bold text-teal-800 text-xl">
+                    {selectedApp.studentName.split(" ").pop()?.[0] || selectedApp.studentName[0]}
                   </div>
 
                   <div>
@@ -1220,8 +1194,8 @@ export default function AdminPanel({
               {/* ATTACHMENT DIGITAL SCAN REVIEW */}
               <div className="bg-slate-50/50 border border-slate-150 rounded-xl p-4 space-y-2">
                 <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Hạ tầng tài liệu đính kèm kèm VNeID</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  {reqBirthCert !== "hidden" && (
+                <div className="max-w-xs mx-auto">
+                  {reqBirthCert !== "hidden" ? (
                     <div className="bg-white border border-slate-200 p-2.5 rounded-lg text-center flex flex-col items-center justify-between min-h-[150px]">
                       <span className="text-[10px] font-bold text-slate-500">Khai sinh học sinh</span>
                       {selectedApp.birthCertUrl && (selectedApp.birthCertUrl.startsWith("data:") || selectedApp.birthCertUrl.startsWith("http")) ? (
@@ -1238,48 +1212,8 @@ export default function AdminPanel({
                         </div>
                       )}
                     </div>
-                  )}
-
-                  {reqResidenceCert !== "hidden" && (
-                    <div className="bg-white border border-slate-200 p-2.5 rounded-lg text-center flex flex-col items-center justify-between min-h-[150px]">
-                      <span className="text-[10px] font-bold text-slate-500">Giấy tờ cư trú / VNeID</span>
-                      {selectedApp.residenceCertUrl && (selectedApp.residenceCertUrl.startsWith("data:") || selectedApp.residenceCertUrl.startsWith("http")) ? (
-                        <div
-                          onClick={() => setLightboxUrl(selectedApp.residenceCertUrl)}
-                          className="w-full h-24 bg-slate-50 hover:bg-slate-100 rounded border border-slate-100 mt-2 cursor-zoom-in relative group overflow-hidden"
-                        >
-                          <img src={selectedApp.residenceCertUrl} alt="" className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[9px] font-sans">Chi tiết</div>
-                        </div>
-                      ) : (
-                        <div className="w-full h-24 bg-slate-100/55 rounded border border-dashed border-slate-200 mt-2 flex items-center justify-center text-slate-400 text-[9px] p-2 leading-tight">
-                          Chưa nộp<br />({reqResidenceCert === "required" ? "Bắt buộc" : "Tùy chọn"})
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {reqAvatar !== "hidden" && (
-                    <div className="bg-white border border-slate-200 p-2.5 rounded-lg text-center flex flex-col items-center justify-between min-h-[150px]">
-                      <span className="text-[10px] font-bold text-slate-500">Ảnh chân dung 3x4</span>
-                      {selectedApp.avatarUrl && (selectedApp.avatarUrl.startsWith("data:") || selectedApp.avatarUrl.startsWith("http")) ? (
-                        <div
-                          onClick={() => setLightboxUrl(selectedApp.avatarUrl)}
-                          className="w-full h-24 bg-slate-50 hover:bg-slate-100 rounded border border-slate-100 mt-2 cursor-zoom-in relative group overflow-hidden"
-                        >
-                          <img src={selectedApp.avatarUrl} alt="" className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[9px] font-sans">Chi tiết</div>
-                        </div>
-                      ) : (
-                        <div className="w-full h-24 bg-slate-100/55 rounded border border-dashed border-slate-200 mt-2 flex items-center justify-center text-slate-400 text-[9px] p-2 leading-tight">
-                          Chưa nộp<br />({reqAvatar === "required" ? "Bắt buộc" : "Tùy chọn"})
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {reqBirthCert === "hidden" && reqResidenceCert === "hidden" && reqAvatar === "hidden" && (
-                    <div className="col-span-full py-4 text-center text-slate-400 text-xs font-sans">
+                  ) : (
+                    <div className="py-4 text-center text-slate-400 text-xs font-sans">
                       Hội đồng không yêu cầu hồ sơ đính kèm số hóa trong năm học này.
                     </div>
                   )}

@@ -547,26 +547,16 @@ export default function ApplicationTracker({ parentApplications, onUpdateApplica
               {/* APPLICATION REVIEWS DETAIL ACCORDION (DOCUMENTS DISPLAY) */}
               <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-4 space-y-3">
                 <h4 className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">Files ảnh đính kèm đã kiểm tra:</h4>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  <div className="bg-white border border-slate-150 p-2.5 rounded-lg flex flex-col items-center justify-center text-center">
-                    <span className="text-[10px] font-semibold text-slate-600">Ảnh chân dung</span>
-                    <div className="w-12 h-16 bg-slate-50 border border-slate-100 mt-2 rounded overflow-hidden flex items-center justify-center">
-                      <img src={currentSelection.avatarUrl} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                    </div>
-                  </div>
-
-                  <div className="bg-white border border-slate-150 p-2.5 rounded-lg flex flex-col items-center justify-center text-center">
-                    <span className="text-[10px] font-semibold text-slate-600">Giấy khai sinh</span>
-                    <div className="w-12 h-16 bg-slate-50 border border-slate-100 mt-2 rounded overflow-hidden flex items-center justify-center">
-                      <img src={currentSelection.birthCertUrl} alt="Birth cert" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                    </div>
-                  </div>
-
-                  <div className="col-span-2 md:col-span-1 bg-white border border-slate-150 p-2.5 rounded-lg flex flex-col items-center justify-center text-center">
-                    <span className="text-[10px] font-semibold text-slate-600">CCCD / VNeID cư trú</span>
-                    <div className="w-12 h-16 bg-slate-50 border border-slate-100 mt-2 rounded overflow-hidden flex items-center justify-center">
-                      <img src={currentSelection.residenceCertUrl} alt="Residence cert" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                    </div>
+                <div className="max-w-xs mx-auto">
+                  <div className="bg-white border border-slate-150 p-3 rounded-lg flex flex-col items-center justify-center text-center shadow-xs">
+                    <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-2">Giấy khai sinh</span>
+                    {currentSelection.birthCertUrl && (currentSelection.birthCertUrl.startsWith("data:") || currentSelection.birthCertUrl.startsWith("http")) ? (
+                      <div className="w-full h-44 bg-slate-50 border border-slate-100 rounded overflow-hidden flex items-center justify-center">
+                        <img src={currentSelection.birthCertUrl} alt="Birth cert" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      </div>
+                    ) : (
+                      <div className="text-[10px] text-slate-400 italic py-4">Chưa nộp hoặc không yêu cầu</div>
+                    )}
                   </div>
                 </div>
               </div>

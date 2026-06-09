@@ -104,14 +104,6 @@ export default function ApplicationForm({
       setErrorMsg("Vui lòng tải lên tài liệu đính kèm: Giấy khai sinh học sinh (mục bắt buộc bắt buộc nộp).");
       return;
     }
-    if (reqAvatar === "required" && !avatarUrl) {
-      setErrorMsg("Vui lòng tải lên tài liệu đính kèm: Ảnh chân dung 3x4 (mục bắt buộc bắt buộc nộp).");
-      return;
-    }
-    if (reqResidenceCert === "required" && !residenceCertUrl) {
-      setErrorMsg("Vui lòng tải lên tài liệu đính kèm: Giấy tờ cư trú hoặc minh chứng VNeID (mục bắt buộc bắt buộc nộp).");
-      return;
-    }
 
     setSubmitting(true);
     setErrorMsg("");
@@ -132,9 +124,9 @@ export default function ApplicationForm({
       parentName: parentName.trim(),
       parentPhone: parentPhone.trim(),
       parentEmail: parentEmail.trim() || "",
-      avatarUrl: avatarUrl || "https://images.unsplash.com/photo-1595152772835-219674b2a8a6?w=150",
+      avatarUrl: "",
       birthCertUrl: birthCertUrl || "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=300",
-      residenceCertUrl: residenceCertUrl || "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=300",
+      residenceCertUrl: "",
       status: ApplicationStatus.PENDING,
       statusNotes: "Hồ sơ trực tuyến đang nằm trong danh sách chờ duyệt kiểm tra tự động.",
       createdBy: userId,
@@ -360,108 +352,44 @@ export default function ApplicationForm({
         </div>
 
         {/* SECTION 3: DOCUMENTS */}
-        {!(reqBirthCert === "hidden" && reqAvatar === "hidden" && reqResidenceCert === "hidden") && (
+        {reqBirthCert !== "hidden" && (
           <div>
             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3 flex items-center gap-1">
               <span className="w-1.5 h-3 bg-teal-600 rounded-sm"></span> 3. Hồ sơ đính kèm số hóa (Ảnh chụp hoặc scan)
             </h4>
             <p className="text-[11px] text-slate-400 mb-4 font-sans leading-relaxed">
-              Hệ thống hỗ trợ đính kèm các tài liệu định dạng PNG/JPG theo cấu hình tuyển sinh hiện hành của nhà trường.
+              Hệ thống tuyển sinh trực tuyến yêu cầu đính kèm hồ sơ điện tử theo quy định quốc gia hiện hành.
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* FILE 1: Student Avatar */}
-              {reqAvatar !== "hidden" && (
-                <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-4 flex flex-col items-center text-center justify-between min-h-[160px]">
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="w-10 h-10 bg-teal-50 text-teal-600 border border-teal-100 rounded-full flex items-center justify-center mb-1 shadow-xs">
-                      <Camera className="w-5 h-5" />
-                    </div>
-                    <h5 className="text-[11px] font-bold text-slate-700">
-                      Ảnh chân dung 3x4 {reqAvatar === "required" && <span className="text-rose-500">*</span>}
-                    </h5>
-                    <p className="text-[9px] text-slate-400 leading-tight">
-                      {reqAvatar === "required" ? "🔴 Bắt buộc nộp" : "🟡 Tùy chọn (Không bắt buộc)"}
-                    </p>
-                  </div>
-                  <div className="w-full mt-3">
-                    {avatarUrl ? (
-                      <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-lg p-1.5 px-3">
-                        <span className="text-[10px] text-emerald-800 text-ellipsis overflow-hidden whitespace-nowrap max-w-[120px] font-sans">{avatarName}</span>
-                        <button type="button" onClick={() => setAvatarUrl("")} className="text-[10px] text-rose-500 hover:underline">Xoá</button>
-                      </div>
-                    ) : (
-                      <label className="flex items-center justify-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-[11px] font-sans font-medium py-1.5 rounded-lg cursor-pointer transition-colors shadow-xs">
-                        <Upload className="w-3.5" />
-                        Tải ảnh lên
-                        <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleFileReader(e.target.files[0], "avatar")} />
-                      </label>
-                    )}
-                  </div>
-                </div>
-              )}
-
+            <div className="max-w-md mx-auto">
               {/* FILE 2: Birth certificate */}
-              {reqBirthCert !== "hidden" && (
-                <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-4 flex flex-col items-center text-center justify-between min-h-[160px]">
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="w-10 h-10 bg-teal-50 text-teal-600 border border-teal-100 rounded-full flex items-center justify-center mb-1 shadow-xs">
-                      <FileText className="w-5 h-5" />
-                    </div>
-                    <h5 className="text-[11px] font-bold text-slate-700">
-                      Giấy khai sinh (Bản chụp) {reqBirthCert === "required" && <span className="text-rose-500">*</span>}
-                    </h5>
-                    <p className="text-[9px] text-slate-400 leading-tight">
-                      {reqBirthCert === "required" ? "🔴 Bắt buộc nộp" : "🟡 Tùy chọn (Không bắt buộc)"}
-                    </p>
+              <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-4 flex flex-col items-center text-center justify-between min-h-[160px]">
+                <div className="flex flex-col items-center gap-1">
+                  <div className="w-10 h-10 bg-teal-50 text-teal-600 border border-teal-100 rounded-full flex items-center justify-center mb-1 shadow-xs">
+                    <FileText className="w-5 h-5" />
                   </div>
-                  <div className="w-full mt-3">
-                    {birthCertUrl ? (
-                      <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-lg p-1.5 px-3">
-                        <span className="text-[10px] text-emerald-800 text-ellipsis overflow-hidden whitespace-nowrap max-w-[120px] font-sans">{birthCertName}</span>
-                        <button type="button" onClick={() => setBirthCertUrl("")} className="text-[10px] text-rose-500 hover:underline">Xoá</button>
-                      </div>
-                    ) : (
-                      <label className="flex items-center justify-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-[11px] font-sans font-medium py-1.5 rounded-lg cursor-pointer transition-colors shadow-xs">
-                        <Upload className="w-3.5" />
-                        Tải ảnh lên
-                        <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleFileReader(e.target.files[0], "birth")} />
-                      </label>
-                    )}
-                  </div>
+                  <h5 className="text-[11px] font-bold text-slate-700">
+                    Giấy khai sinh (Bản chụp) {reqBirthCert === "required" && <span className="text-rose-500">*</span>}
+                  </h5>
+                  <p className="text-[9px] text-slate-400 leading-tight">
+                    {reqBirthCert === "required" ? "🔴 Bắt buộc nộp" : "🟡 Tùy chọn (Không bắt buộc)"}
+                  </p>
                 </div>
-              )}
-
-              {/* FILE 3: Residence certificate */}
-              {reqResidenceCert !== "hidden" && (
-                <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-4 flex flex-col items-center text-center justify-between min-h-[160px]">
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="w-10 h-10 bg-teal-50 text-teal-600 border border-teal-100 rounded-full flex items-center justify-center mb-1 shadow-xs">
-                      <ShieldCheck className="w-5 h-5" />
+                <div className="w-full mt-3">
+                  {birthCertUrl ? (
+                    <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-lg p-1.5 px-3">
+                      <span className="text-[10px] text-emerald-800 text-ellipsis overflow-hidden whitespace-nowrap max-w-[200px] font-sans">{birthCertName || "giay-khai-sinh.jpg"}</span>
+                      <button type="button" onClick={() => setBirthCertUrl("")} className="text-[10px] text-rose-500 hover:underline">Xoá</button>
                     </div>
-                    <h5 className="text-[11px] font-bold text-slate-700">
-                      Xác nhận cư trú / VNeID {reqResidenceCert === "required" && <span className="text-rose-500">*</span>}
-                    </h5>
-                    <p className="text-[9px] text-slate-400 leading-tight">
-                      {reqResidenceCert === "required" ? "🔴 Bắt buộc nộp" : "🟡 Tùy chọn (Không bắt buộc)"}
-                    </p>
-                  </div>
-                  <div className="w-full mt-3">
-                    {residenceCertUrl ? (
-                      <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-lg p-1.5 px-3">
-                        <span className="text-[10px] text-emerald-800 text-ellipsis overflow-hidden whitespace-nowrap max-w-[120px] font-sans">{residenceCertName}</span>
-                        <button type="button" onClick={() => setResidenceCertUrl("")} className="text-[10px] text-rose-500 hover:underline">Xoá</button>
-                      </div>
-                    ) : (
-                      <label className="flex items-center justify-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-[11px] font-sans font-medium py-1.5 rounded-lg cursor-pointer transition-colors shadow-xs">
-                        <Upload className="w-3.5" />
-                        Tải ảnh lên
-                        <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleFileReader(e.target.files[0], "residence")} />
-                      </label>
-                    )}
-                  </div>
+                  ) : (
+                    <label className="flex items-center justify-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-[11px] font-sans font-medium py-1.5 rounded-lg cursor-pointer transition-colors shadow-xs">
+                      <Upload className="w-3.5" />
+                      Tải ảnh lên
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleFileReader(e.target.files[0], "birth")} />
+                    </label>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
         )}

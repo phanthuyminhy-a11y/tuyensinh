@@ -19,13 +19,13 @@ export default function App() {
   // Simulation mode toggler ("parent" vs "admin")
   const [roleMode, setRoleMode] = useState<"parent" | "admin">("parent");
 
-  // Mật khẩu ban quản trị (mặc định là admin123)
+  // Mật khẩu ban quản trị (mặc định là 1987Dat@)
   const [adminPassword, setAdminPassword] = useState<string>(() => {
     try {
       const saved = localStorage.getItem("RachCheo_AdminPassword");
-      return saved || "admin123";
+      return saved || "1987Dat@";
     } catch {
-      return "admin123";
+      return "1987Dat@";
     }
   });
 
@@ -200,7 +200,7 @@ export default function App() {
         };
 
         const defaults = {
-          adminPassword: getLocalStorageItem("RachCheo_AdminPassword", "admin123") as string,
+          adminPassword: getLocalStorageItem("RachCheo_AdminPassword", "1987Dat@") as string,
           isRegistrationOpen: getLocalStorageItem("RachCheo_IsRegistrationOpen", true) as boolean,
           enrollmentQuota: getLocalStorageItem("RachCheo_EnrollmentQuota", 120) as number,
           reqAvatar: getLocalStorageItem("RachCheo_ReqAvatar", "required") as "required" | "optional" | "hidden",
@@ -1168,14 +1168,6 @@ export default function App() {
                   </div>
                 </>
               )}
-
-              <div className="bg-amber-500/5 border border-amber-500/10 rounded-xl p-3 text-center">
-                <span className="text-[9px] text-amber-800 font-bold block uppercase tracking-wide">💡 Trạng thái hiện tại</span>
-                <p className="text-[10px] text-slate-500 mt-0.5 font-sans leading-relaxed">
-                  Mật khẩu áp dụng lúc này:<br />
-                  <span className="font-bold text-amber-900 font-mono select-all bg-amber-50/50 p-0.5 px-1.5 rounded border border-amber-100 inline-block mt-1 font-sans text-xs">{adminPassword}</span>
-                </p>
-              </div>
             </div>
 
             <div className="bg-slate-50 p-3.5 border-t border-slate-100 flex items-center justify-end gap-2 text-xs">
