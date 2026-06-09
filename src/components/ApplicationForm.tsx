@@ -57,15 +57,81 @@ export default function ApplicationForm({
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64String = reader.result as string;
-      if (type === "avatar") {
-        setAvatarUrl(base64String);
-        setAvatarName(file.name);
-      } else if (type === "birth") {
-        setBirthCertUrl(base64String);
-        setBirthCertName(file.name);
-      } else if (type === "residence") {
-        setResidenceCertUrl(base64String);
-        setResidenceCertName(file.name);
+      if (file.type.startsWith("image/")) {
+        const img = new Image();
+        img.src = base64String;
+        img.onload = () => {
+          // Set a reasonable high-enough resolution max boundary (e.g. 1000px width/height)
+          const maxDim = 1000;
+          let width = img.width;
+          let height = img.height;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            // Compress image to JPEG at 0.7 quality to reduce file size to ~30-80KB
+            const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
+            if (type === "avatar") {
+              setAvatarUrl(compressedBase64);
+              setAvatarName(file.name);
+            } else if (type === "birth") {
+              setBirthCertUrl(compressedBase64);
+              setBirthCertName(file.name);
+            } else if (type === "residence") {
+              setResidenceCertUrl(compressedBase64);
+              setResidenceCertName(file.name);
+            }
+          } else {
+            // Context fallback
+            if (type === "avatar") {
+              setAvatarUrl(base64String);
+              setAvatarName(file.name);
+            } else if (type === "birth") {
+              setBirthCertUrl(base64String);
+              setBirthCertName(file.name);
+            } else if (type === "residence") {
+              setResidenceCertUrl(base64String);
+              setResidenceCertName(file.name);
+            }
+          }
+        };
+        img.onerror = () => {
+          // Image load fallback
+          if (type === "avatar") {
+            setAvatarUrl(base64String);
+            setAvatarName(file.name);
+          } else if (type === "birth") {
+            setBirthCertUrl(base64String);
+            setBirthCertName(file.name);
+          } else if (type === "residence") {
+            setResidenceCertUrl(base64String);
+            setResidenceCertName(file.name);
+          }
+        };
+      } else {
+        // Fallback for non-image files
+        if (type === "avatar") {
+          setAvatarUrl(base64String);
+          setAvatarName(file.name);
+        } else if (type === "birth") {
+          setBirthCertUrl(base64String);
+          setBirthCertName(file.name);
+        } else if (type === "residence") {
+          setResidenceCertUrl(base64String);
+          setResidenceCertName(file.name);
+        }
       }
     };
     reader.readAsDataURL(file);

@@ -225,6 +225,13 @@ export default function App() {
             }
           });
 
+          // If the password in Firestore is the old fallback "admin123", upgrade it dynamically to "1987Dat@"
+          if (data.adminPassword === "admin123" || !data.adminPassword) {
+            needsSelfHeal = true;
+            missingPayload.adminPassword = "1987Dat@";
+            data.adminPassword = "1987Dat@";
+          }
+
           if (needsSelfHeal) {
             // Write the missing fields back to Firestore so the document is complete
             setDoc(configDocRef, missingPayload, { merge: true }).catch((err) => {
