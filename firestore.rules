@@ -37,9 +37,8 @@ service cloud.firestore {
       // Anyone can query or get a specific document to support simulation tracking and searches.
       allow read: if true;
       
-      // Permit creation of applications with status 'Chờ duyệt' and valid structure.
+      // Permit creation of applications with valid structure.
       allow create: if isValidId(applicationId) && 
-                    request.resource.data.status == "Chờ duyệt" &&
                     isValidApplication(request.resource.data);
 
       // Support updates (field updates from parents, status updates from admin) with valid structure.
