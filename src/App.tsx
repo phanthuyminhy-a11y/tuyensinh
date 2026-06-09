@@ -137,6 +137,10 @@ export default function App() {
 
   const [adminSectionTab, setAdminSectionTab] = useState<"applications" | "announcements">("applications");
 
+  // Track Cloud Database Sync status & Diagnostics
+  const [isSyncConnected, setIsSyncConnected] = useState<boolean>(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+
   // Track user-submitted and manually searched application IDs so that even if their anonymous session
   // is reset, their application stays pinned in "Hồ sơ tự nộp của tôi".
   const [localAppIds, setLocalAppIds] = useState<string[]>(() => {
@@ -213,23 +217,54 @@ export default function App() {
             // Write the missing fields back to Firestore so the document is complete
             setDoc(configDocRef, missingPayload, { merge: true }).catch((err) => {
               console.error("Failed to self-heal missing Firestore settings:", err);
+              setSyncError(err instanceof Error ? err.message : String(err));
             });
           }
 
           // Safely set states with database value or fallback defaults
-          setAdminPassword(data.adminPassword || defaults.adminPassword);
-          setIsRegistrationOpen(data.isRegistrationOpen !== undefined ? data.isRegistrationOpen : defaults.isRegistrationOpen);
-          setEnrollmentQuota(data.enrollmentQuota !== undefined ? Number(data.enrollmentQuota) : defaults.enrollmentQuota);
-          setReqAvatar((data.reqAvatar as "required" | "optional" | "hidden") || defaults.reqAvatar);
-          setReqBirthCert((data.reqBirthCert as "required" | "optional" | "hidden") || defaults.reqBirthCert);
-          setReqResidenceCert((data.reqResidenceCert as "required" | "optional" | "hidden") || defaults.reqResidenceCert);
-          setContactHotline(data.contactHotline || defaults.contactHotline);
-          setContactEmail(data.contactEmail || defaults.contactEmail);
-          setContactAddress(data.contactAddress || defaults.contactAddress);
+          const finalPassword = data.adminPassword || defaults.adminPassword;
+          const finalRegOpen = data.isRegistrationOpen !== undefined ? data.isRegistrationOpen : defaults.isRegistrationOpen;
+          const finalQuota = data.enrollmentQuota !== undefined ? Number(data.enrollmentQuota) : defaults.enrollmentQuota;
+          const finalAvatar = (data.reqAvatar as "required" | "optional" | "hidden") || defaults.reqAvatar;
+          const finalBirthCert = (data.reqBirthCert as "required" | "optional" | "hidden") || defaults.reqBirthCert;
+          const finalResidence = (data.reqResidenceCert as "required" | "optional" | "hidden") || defaults.reqResidenceCert;
+          const finalHotline = data.contactHotline || defaults.contactHotline;
+          const finalEmail = data.contactEmail || defaults.contactEmail;
+          const finalAddress = data.contactAddress || defaults.contactAddress;
+
+          setAdminPassword(finalPassword);
+          setIsRegistrationOpen(finalRegOpen);
+          setEnrollmentQuota(finalQuota);
+          setReqAvatar(finalAvatar);
+          setReqBirthCert(finalBirthCert);
+          setReqResidenceCert(finalResidence);
+          setContactHotline(finalHotline);
+          setContactEmail(finalEmail);
+          setContactAddress(finalAddress);
+
+          // Update sync status indicator
+          setIsSyncConnected(true);
+          setSyncError(null);
+
+          // Sync back to local storage so other browser tabs or sub-modules load correctly from disk next time
+          try {
+            localStorage.setItem("RachCheo_AdminPassword", finalPassword);
+            localStorage.setItem("RachCheo_IsRegistrationOpen", String(finalRegOpen));
+            localStorage.setItem("RachCheo_EnrollmentQuota", String(finalQuota));
+            localStorage.setItem("RachCheo_ReqAvatar", finalAvatar);
+            localStorage.setItem("RachCheo_ReqBirthCert", finalBirthCert);
+            localStorage.setItem("RachCheo_ReqResidenceCert", finalResidence);
+            localStorage.setItem("RachCheo_ContactHotline", finalHotline);
+            localStorage.setItem("RachCheo_ContactEmail", finalEmail);
+            localStorage.setItem("RachCheo_ContactAddress", finalAddress);
+          } catch (e) {
+            console.warn("Storage client-side caching failed:", e);
+          }
         } else {
           // Initialize/seed settings in Firestore if not present yet
           setDoc(configDocRef, defaults).catch((err) => {
             console.error("Failed to seed default settings to Firestore:", err);
+            setSyncError(err instanceof Error ? err.message : String(err));
           });
           
           // Apply fallback defaults immediately
@@ -242,13 +277,20 @@ export default function App() {
           setContactHotline(defaults.contactHotline);
           setContactEmail(defaults.contactEmail);
           setContactAddress(defaults.contactAddress);
+
+          setIsSyncConnected(true);
+          setSyncError(null);
         }
       }, (error) => {
         console.warn("Firestore settings subscription warning:", error);
+        setSyncError(error instanceof Error ? error.message : String(error));
+        setIsSyncConnected(false);
       });
       return () => unsubscribe();
     } catch (err) {
       console.error("Firestore settings registration error:", err);
+      setSyncError(err instanceof Error ? err.message : String(err));
+      setIsSyncConnected(false);
     }
   }, []);
 
@@ -645,6 +687,8 @@ export default function App() {
               onUpdateApplication={handleUpdateApplication}
               onDeleteApplication={handleDeleteApplication}
               isRegistrationOpen={isRegistrationOpen}
+              isSyncConnected={isSyncConnected}
+              syncError={syncError}
               onToggleRegistration={async (val) => {
                 setIsRegistrationOpen(val);
                 try {

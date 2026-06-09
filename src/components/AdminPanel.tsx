@@ -21,6 +21,8 @@ interface AdminPanelProps {
   onUpdateReqResidenceCert?: (val: "required" | "optional" | "hidden") => void;
   adminPassword?: string;
   onUpdateAdminPassword?: (val: string) => void;
+  isSyncConnected?: boolean;
+  syncError?: string | null;
 
   // Customizations
   announcements?: SchoolAnnouncement[];
@@ -53,6 +55,8 @@ export default function AdminPanel({
   onUpdateReqResidenceCert,
   adminPassword = "admin123",
   onUpdateAdminPassword,
+  isSyncConnected = false,
+  syncError = null,
 
   // Customizations
   announcements = [],
@@ -771,7 +775,31 @@ export default function AdminPanel({
         <>
           {/* PORTAL TOGGLE GATE & QUOTA SETTINGS */}
           <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-2xs space-y-4">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            {/* Cloud Sync Diagnostic Indicator */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100/70 text-[10px] text-slate-500 font-sans">
+              <div className="flex items-center gap-1.5">
+                <Settings className="w-3.5 h-3.5 text-slate-400 rotate-180 transition-transform duration-700 animate-spin" style={{ animationDuration: '3s' }} />
+                <span>Trạng thái kết nối đồng bộ đám mây (Cloud Sync Monitor):</span>
+              </div>
+              {isSyncConnected ? (
+                <span className="inline-flex items-center gap-1.5 font-bold text-emerald-700 bg-emerald-50 border border-emerald-100/60 px-2.5 py-0.5 rounded-full select-none animate-fade-in">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Đang đồng bộ trực tuyến với Firestore Cloud
+                </span>
+              ) : syncError ? (
+                <span className="inline-flex items-center gap-1.5 font-bold text-rose-700 bg-rose-50 border border-rose-100/60 px-2.5 py-0.5 rounded-full select-none break-all animate-fade-in" title={syncError}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                  Mất kết nối: {syncError.length > 40 ? syncError.slice(0, 40) + "..." : syncError}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 font-bold text-amber-700 bg-amber-50 border border-amber-100/60 px-2.5 py-0.5 rounded-full select-none animate-fade-in">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-bounce"></span>
+                  Đang kiểm tra kết nối cơ sở dữ liệu...
+                </span>
+              )}
+            </div>
+
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="space-y-1">
             <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
               <span className={`w-2 h-2 rounded-full ${isRegistrationOpen ? "bg-emerald-500 animate-pulse" : "bg-rose-500"}`}></span>
