@@ -123,6 +123,60 @@
         }
       },
       "required": ["title", "content", "category", "publishedAt"]
+    },
+    "SystemSettings": {
+      "title": "System Settings",
+      "description": "Global school configuration properties including administrative keys, quotas, and public hotline contacts.",
+      "type": "object",
+      "properties": {
+        "adminPassword": {
+          "type": "string",
+          "description": "Administrative lock-key to unlock the admissions board controls."
+        },
+        "isRegistrationOpen": {
+          "type": "boolean",
+          "description": "Indicates whether the registration portal is open for parents."
+        },
+        "enrollmentQuota": {
+          "type": "integer",
+          "description": "Total available enrollment slots for primary school admission."
+        },
+        "reqAvatar": {
+          "type": "string",
+          "enum": ["required", "optional", "hidden"],
+          "description": "Required status of student profile picture."
+        },
+        "reqBirthCert": {
+          "type": "string",
+          "enum": ["required", "optional", "hidden"],
+          "description": "Required status of student birth certificate scan."
+        },
+        "reqResidenceCert": {
+          "type": "string",
+          "enum": ["required", "optional", "hidden"],
+          "description": "Required status of residence certificate scan."
+        },
+        "contactHotline": {
+          "type": "string",
+          "description": "Secondary hotline/phone contact for user assistance."
+        },
+        "contactEmail": {
+          "type": "string",
+          "description": "Official email ID for enquiries."
+        },
+        "contactAddress": {
+          "type": "string",
+          "description": "Permanent physical office address of the school."
+        }
+      },
+      "required": [
+        "adminPassword",
+        "isRegistrationOpen",
+        "enrollmentQuota",
+        "reqAvatar",
+        "reqBirthCert",
+        "reqResidenceCert"
+      ]
     }
   },
   "firestore": {
@@ -133,6 +187,10 @@
     "/announcements/{announcementId}": {
       "schema": "SchoolAnnouncement",
       "description": "School announcement and guidelines database."
+    },
+    "/settings/{settingId}": {
+      "schema": "SystemSettings",
+      "description": "School administration parameters including registration toggles, quotas, and admin passcode configs."
     }
   }
 }

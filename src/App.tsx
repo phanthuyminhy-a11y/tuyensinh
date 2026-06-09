@@ -4,7 +4,7 @@ import { ApplicationStatus, AdmissionApplication, SchoolAnnouncement } from "./t
 import { defaultAnnouncements } from "./data/defaultAnnouncements";
 import { db, auth, handleFirestoreError, OperationType } from "./firebase";
 import { signInAnonymously, onAuthStateChanged, signOut, User as FirebaseUser } from "firebase/auth";
-import { collection, onSnapshot, query, getDocs } from "firebase/firestore";
+import { collection, onSnapshot, query, getDocs, doc, setDoc } from "firebase/firestore";
 
 import ApplicationForm from "./components/ApplicationForm";
 import ApplicationTracker from "./components/ApplicationTracker";
@@ -176,6 +176,80 @@ export default function App() {
       }
     });
     return () => unsubscribe();
+  }, []);
+
+  // Real-time synchronization of global administrative configurations and password from Firestore
+  useEffect(() => {
+    try {
+      const configDocRef = doc(db, "settings", "config");
+      const unsubscribe = onSnapshot(configDocRef, (snapshot) => {
+        const defaults = {
+          adminPassword: "admin123",
+          isRegistrationOpen: true,
+          enrollmentQuota: 120,
+          reqAvatar: "required" as const,
+          reqBirthCert: "required" as const,
+          reqResidenceCert: "required" as const,
+          contactHotline: "0290.3888.222",
+          contactEmail: "th.rachcheo@phutun.edu.vn",
+          contactAddress: "Ấp Rạch Chèo, Xã Nguyễn Việt Khái, Tỉnh Cà Mau"
+        };
+
+        if (snapshot.exists()) {
+          const data = snapshot.data();
+          
+          // Check for any missing values compared to the schema defaults
+          const missingPayload: Record<string, any> = {};
+          let needsSelfHeal = false;
+
+          Object.entries(defaults).forEach(([key, fallbackValue]) => {
+            if (data[key] === undefined) {
+              needsSelfHeal = true;
+              missingPayload[key] = fallbackValue;
+            }
+          });
+
+          if (needsSelfHeal) {
+            // Write the missing fields back to Firestore so the document is complete
+            setDoc(configDocRef, missingPayload, { merge: true }).catch((err) => {
+              console.error("Failed to self-heal missing Firestore settings:", err);
+            });
+          }
+
+          // Safely set states with database value or fallback defaults
+          setAdminPassword(data.adminPassword || defaults.adminPassword);
+          setIsRegistrationOpen(data.isRegistrationOpen !== undefined ? data.isRegistrationOpen : defaults.isRegistrationOpen);
+          setEnrollmentQuota(data.enrollmentQuota !== undefined ? Number(data.enrollmentQuota) : defaults.enrollmentQuota);
+          setReqAvatar((data.reqAvatar as "required" | "optional" | "hidden") || defaults.reqAvatar);
+          setReqBirthCert((data.reqBirthCert as "required" | "optional" | "hidden") || defaults.reqBirthCert);
+          setReqResidenceCert((data.reqResidenceCert as "required" | "optional" | "hidden") || defaults.reqResidenceCert);
+          setContactHotline(data.contactHotline || defaults.contactHotline);
+          setContactEmail(data.contactEmail || defaults.contactEmail);
+          setContactAddress(data.contactAddress || defaults.contactAddress);
+        } else {
+          // Initialize/seed settings in Firestore if not present yet
+          setDoc(configDocRef, defaults).catch((err) => {
+            console.error("Failed to seed default settings to Firestore:", err);
+          });
+          
+          // Apply fallback defaults immediately
+          setAdminPassword(defaults.adminPassword);
+          setIsRegistrationOpen(defaults.isRegistrationOpen);
+          setEnrollmentQuota(defaults.enrollmentQuota);
+          setReqAvatar(defaults.reqAvatar);
+          setReqBirthCert(defaults.reqBirthCert);
+          setReqResidenceCert(defaults.reqResidenceCert);
+          setContactHotline(defaults.contactHotline);
+          setContactEmail(defaults.contactEmail);
+          setContactAddress(defaults.contactAddress);
+        }
+      }, (error) => {
+        console.warn("Firestore settings subscription warning:", error);
+      });
+      return () => unsubscribe();
+    } catch (err) {
+      console.error("Firestore settings registration error:", err);
+    }
   }, []);
 
   // Real-time synchronization of the admission applications database
@@ -571,57 +645,63 @@ export default function App() {
               onUpdateApplication={handleUpdateApplication}
               onDeleteApplication={handleDeleteApplication}
               isRegistrationOpen={isRegistrationOpen}
-              onToggleRegistration={(val) => {
+              onToggleRegistration={async (val) => {
                 setIsRegistrationOpen(val);
                 try {
                   localStorage.setItem("RachCheo_IsRegistrationOpen", String(val));
+                  await setDoc(doc(db, "settings", "config"), { isRegistrationOpen: val }, { merge: true });
                 } catch (e) {
-                  console.warn("Storage set failed", e);
+                  console.warn("Storage/Firestore set failed", e);
                 }
               }}
               enrollmentQuota={enrollmentQuota}
-              onUpdateQuota={(val) => {
+              onUpdateQuota={async (val) => {
                 setEnrollmentQuota(val);
                 try {
                   localStorage.setItem("RachCheo_EnrollmentQuota", String(val));
+                  await setDoc(doc(db, "settings", "config"), { enrollmentQuota: val }, { merge: true });
                 } catch (e) {
-                  console.warn("Storage set failed", e);
+                  console.warn("Storage/Firestore set failed", e);
                 }
               }}
               reqAvatar={reqAvatar}
               reqBirthCert={reqBirthCert}
               reqResidenceCert={reqResidenceCert}
-              onUpdateReqAvatar={(val) => {
+              onUpdateReqAvatar={async (val) => {
                 setReqAvatar(val);
                 try {
                   localStorage.setItem("RachCheo_ReqAvatar", val);
+                  await setDoc(doc(db, "settings", "config"), { reqAvatar: val }, { merge: true });
                 } catch (e) {
-                  console.warn("Storage set failed", e);
+                  console.warn("Storage/Firestore set failed", e);
                 }
               }}
-              onUpdateReqBirthCert={(val) => {
+              onUpdateReqBirthCert={async (val) => {
                 setReqBirthCert(val);
                 try {
                   localStorage.setItem("RachCheo_ReqBirthCert", val);
+                  await setDoc(doc(db, "settings", "config"), { reqBirthCert: val }, { merge: true });
                 } catch (e) {
-                  console.warn("Storage set failed", e);
+                  console.warn("Storage/Firestore set failed", e);
                 }
               }}
-              onUpdateReqResidenceCert={(val) => {
+              onUpdateReqResidenceCert={async (val) => {
                 setReqResidenceCert(val);
                 try {
                   localStorage.setItem("RachCheo_ReqResidenceCert", val);
+                  await setDoc(doc(db, "settings", "config"), { reqResidenceCert: val }, { merge: true });
                 } catch (e) {
-                  console.warn("Storage set failed", e);
+                  console.warn("Storage/Firestore set failed", e);
                 }
               }}
               adminPassword={adminPassword}
-              onUpdateAdminPassword={(val) => {
+              onUpdateAdminPassword={async (val) => {
                 setAdminPassword(val);
                 try {
                   localStorage.setItem("RachCheo_AdminPassword", val);
+                  await setDoc(doc(db, "settings", "config"), { adminPassword: val }, { merge: true });
                 } catch (e) {
-                  console.warn("Storage set failed", e);
+                  console.warn("Storage/Firestore set failed", e);
                 }
               }}
               announcements={announcements}
@@ -629,28 +709,31 @@ export default function App() {
               onUpdateAnnouncement={handleUpdateAnnouncement}
               onDeleteAnnouncement={handleDeleteAnnouncement}
               contactHotline={contactHotline}
-              onUpdateContactHotline={(val) => {
+              onUpdateContactHotline={async (val) => {
                 setContactHotline(val);
                 try {
                   localStorage.setItem("RachCheo_ContactHotline", val);
+                  await setDoc(doc(db, "settings", "config"), { contactHotline: val }, { merge: true });
                 } catch (e) {
                   console.warn(e);
                 }
               }}
               contactEmail={contactEmail}
-              onUpdateContactEmail={(val) => {
+              onUpdateContactEmail={async (val) => {
                 setContactEmail(val);
                 try {
                   localStorage.setItem("RachCheo_ContactEmail", val);
+                  await setDoc(doc(db, "settings", "config"), { contactEmail: val }, { merge: true });
                 } catch (e) {
                   console.warn(e);
                 }
               }}
               contactAddress={contactAddress}
-              onUpdateContactAddress={(val) => {
+              onUpdateContactAddress={async (val) => {
                 setContactAddress(val);
                 try {
                   localStorage.setItem("RachCheo_ContactAddress", val);
+                  await setDoc(doc(db, "settings", "config"), { contactAddress: val }, { merge: true });
                 } catch (e) {
                   console.warn(e);
                 }
@@ -1101,6 +1184,9 @@ export default function App() {
                     setAdminPassword(newVal);
                     try {
                       localStorage.setItem("RachCheo_AdminPassword", newVal);
+                      setDoc(doc(db, "settings", "config"), { adminPassword: newVal }, { merge: true }).catch((err) => {
+                        console.error("Failed to sync new password to Firestore:", err);
+                      });
                     } catch (e) {
                       console.warn("Storage update failed", e);
                     }
