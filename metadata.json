@@ -1,7 +1,9 @@
 {
   "name": "Trường Tiểu học Rạch Chèo",
   "description": "Cổng tuyển sinh trực tuyến lớp 1 trường Tiểu học Rạch Chèo, hỗ trợ nộp giấy khai sinh số hóa và theo dõi tiến trình xét duyệt thời gian thực tích hợp trí tuệ nhân tạo.",
-  "requestFramePermissions": [],
+  "requestFramePermissions": [
+    "camera"
+  ],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
   ]

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { UserPlus, Upload, ShieldCheck, CheckCircle2, AlertTriangle, RefreshCw, FileText, Camera, MapPin } from "lucide-react";
 import { ApplicationStatus, AdmissionApplication } from "../types";
 import { db, handleFirestoreError, OperationType } from "../firebase";
@@ -43,6 +43,124 @@ export default function ApplicationForm({
   const [avatarName, setAvatarName] = useState("");
   const [birthCertName, setBirthCertName] = useState("");
   const [residenceCertName, setResidenceCertName] = useState("");
+
+  // Camera state and controls
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [cameraDevices, setCameraDevices] = useState<MediaDeviceInfo[]>([]);
+  const [activeCameraId, setActiveCameraId] = useState<string>("");
+  const [cameraError, setCameraError] = useState<string>("");
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  // Stop camera tracks helper
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    setIsCameraActive(false);
+  };
+
+  // Handle active camera stream creation and swapping
+  useEffect(() => {
+    let active = true;
+    if (!isCameraActive) {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+      return;
+    }
+
+    const initCamera = async () => {
+      setCameraError("");
+      try {
+        const constraints: MediaStreamConstraints = {
+          video: activeCameraId 
+            ? { deviceId: { exact: activeCameraId } }
+            : { facingMode: { ideal: "environment" } }
+        };
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        
+        if (!active) {
+          stream.getTracks().forEach(t => t.stop());
+          return;
+        }
+
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+
+        // List hardware camera devices if not done yet
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter((d) => d.kind === "videoinput");
+        setCameraDevices(videoDevices);
+
+        // Auto select the first or best default device ID
+        if (!activeCameraId && videoDevices.length > 0) {
+          const backCamera = videoDevices.find(
+            (d) => d.label.toLowerCase().includes("back") || d.label.toLowerCase().includes("environment") || d.label.toLowerCase().includes("sau")
+          );
+          if (backCamera) {
+            setActiveCameraId(backCamera.deviceId);
+          } else {
+            setActiveCameraId(videoDevices[0].deviceId);
+          }
+        }
+      } catch (err: any) {
+        console.error("Camera system hook error:", err);
+        setCameraError(
+          "Không thể truy cập máy ảnh. Vui lòng cấp quyền sử dụng camera trong trình duyệt hoặc cắm/mở thiết bị ghi hình."
+        );
+      }
+    };
+
+    initCamera();
+
+    return () => {
+      active = false;
+    };
+  }, [isCameraActive, activeCameraId]);
+
+  // Clean up stream on unmount
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
+
+  const startCameraCapture = () => {
+    setIsCameraActive(true);
+  };
+
+  const switchCamera = (deviceId: string) => {
+    setActiveCameraId(deviceId);
+  };
+
+  const capturePhoto = () => {
+    if (!videoRef.current) return;
+    try {
+      const video = videoRef.current;
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth || 1280;
+      canvas.height = video.videoHeight || 720;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+        setBirthCertUrl(dataUrl);
+        setBirthCertName(`chup_truc_tiep_${Date.now()}.jpg`);
+        stopCamera();
+      }
+    } catch (err) {
+      console.error("Capture photo failure:", err);
+      setCameraError("Gặp sự cố lỗi xử lý tĩnh ảnh chụp từ máy quay.");
+    }
+  };
 
   // Check if student born in 2020 (6 years old in 2026 school portal year)
   const getBirthYearStatus = () => {
@@ -445,14 +563,24 @@ export default function ApplicationForm({
                   {birthCertUrl ? (
                     <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-lg p-1.5 px-3">
                       <span className="text-[10px] text-emerald-800 text-ellipsis overflow-hidden whitespace-nowrap max-w-[200px] font-sans">{birthCertName || "giay-khai-sinh.jpg"}</span>
-                      <button type="button" onClick={() => setBirthCertUrl("")} className="text-[10px] text-rose-500 hover:underline">Xoá</button>
+                      <button type="button" onClick={() => { setBirthCertUrl(""); setBirthCertName(""); }} className="text-[10px] text-rose-500 hover:underline">Xoá</button>
                     </div>
                   ) : (
-                    <label className="flex items-center justify-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-[11px] font-sans font-medium py-1.5 rounded-lg cursor-pointer transition-colors shadow-xs">
-                      <Upload className="w-3.5" />
-                      Tải ảnh lên
-                      <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleFileReader(e.target.files[0], "birth")} />
-                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className="flex items-center justify-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-[11px] font-sans font-medium py-1.5 rounded-lg cursor-pointer transition-colors shadow-xs">
+                        <Upload className="w-3.5" />
+                        Tải ảnh lên
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleFileReader(e.target.files[0], "birth")} />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={startCameraCapture}
+                        className="flex items-center justify-center gap-1.5 bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-700 text-[11px] font-sans font-medium py-1.5 rounded-lg cursor-pointer transition-colors shadow-xs"
+                      >
+                        <Camera className="w-3.5" />
+                        Chụp trực tiếp
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -483,6 +611,112 @@ export default function ApplicationForm({
           </button>
         </div>
       </form>
+
+      {/* CAMERA CAPTURE MODAL */}
+      {isCameraActive && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-xs transition-opacity duration-300">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-100 flex flex-col overflow-hidden max-h-[92vh] animate-in fade-in duration-200">
+            {/* Header */}
+            <div className="bg-slate-50 px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Camera className="w-4 h-4 text-teal-600 animate-pulse" />
+                <h3 className="text-xs font-bold text-slate-800 font-sans uppercase tracking-wider">
+                  Máy ảnh kỹ thuật số trực tiếp
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={stopCamera}
+                className="text-slate-400 hover:text-slate-600 text-xs font-medium cursor-pointer"
+              >
+                Đóng ✕
+              </button>
+            </div>
+
+            {/* Video preview arena */}
+            <div className="relative bg-slate-950 flex-1 flex flex-col items-center justify-center min-h-[280px]">
+              {cameraError ? (
+                <div className="p-6 text-center flex flex-col items-center justify-center gap-3">
+                  <AlertTriangle className="w-8 h-8 text-amber-500 animate-bounce" />
+                  <p className="text-xs text-slate-300 font-sans font-medium px-4 leading-relaxed">
+                    {cameraError}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCameraError("");
+                      setActiveCameraId("");
+                    }}
+                    className="mt-2 text-[10px] uppercase font-bold text-teal-400 hover:text-teal-300 hover:underline cursor-pointer"
+                  >
+                    Thử kết nối lại
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full object-cover aspect-[4/3] max-h-[360px]"
+                  />
+                  {/* Photo guide overlay box */}
+                  <div className="absolute inset-x-8 inset-y-6 border-2 border-dashed border-teal-400/60 rounded-xl pointer-events-none flex flex-col items-center justify-between p-4 bg-transparent">
+                    <div className="text-[9px] uppercase font-bold text-teal-300 bg-slate-950/60 px-2 py-0.5 rounded-sm tracking-widest font-sans">
+                      Giấy khai sinh
+                    </div>
+                    <div className="text-[8px] font-medium text-slate-300 text-center bg-slate-950/60 px-2 py-0.5 rounded-sm leading-relaxed max-w-[220px]">
+                      Đặt chính diện, thẳng thắn, tránh bóng mờ/lóa
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Camera settings & Trigger controls */}
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex flex-col gap-3">
+              {/* Option to switch between dual cameras */}
+              {cameraDevices.length > 1 && (
+                <div className="flex items-center justify-between gap-2 bg-white px-2.5 py-1.5 rounded-xl border border-slate-200">
+                  <label className="text-[10px] font-bold text-slate-500 shrink-0 font-sans">Chọn ống kính:</label>
+                  <select
+                    value={activeCameraId}
+                    onChange={(e) => switchCamera(e.target.value)}
+                    className="text-[10px] bg-transparent outline-none text-slate-700 w-full max-w-[200px] text-right font-sans cursor-pointer font-medium"
+                  >
+                    {cameraDevices.map((device, i) => (
+                      <option key={device.deviceId} value={device.deviceId}>
+                        {device.label || `Máy ảnh gốc ${i + 1}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div className="flex items-center justify-between gap-2.5 mt-1">
+                <button
+                  type="button"
+                  onClick={stopCamera}
+                  className="px-4 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-all cursor-pointer font-sans shadow-xs"
+                >
+                  Huỷ
+                </button>
+                <button
+                  type="button"
+                  disabled={!!cameraError}
+                  onClick={capturePhoto}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-teal-700/10 cursor-pointer font-sans"
+                >
+                  <Camera className="w-4 h-4" />
+                  Chụp ngay lập tức
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
