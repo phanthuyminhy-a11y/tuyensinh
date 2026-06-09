@@ -53,7 +53,7 @@ export default function AdminPanel({
   onUpdateReqAvatar,
   onUpdateReqBirthCert,
   onUpdateReqResidenceCert,
-  adminPassword = "1987Dat@",
+  adminPassword = "buivandat1987@",
   onUpdateAdminPassword,
   isSyncConnected = false,
   syncError = null,

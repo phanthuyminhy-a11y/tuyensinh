@@ -19,13 +19,13 @@ export default function App() {
   // Simulation mode toggler ("parent" vs "admin")
   const [roleMode, setRoleMode] = useState<"parent" | "admin">("parent");
 
-  // Mật khẩu ban quản trị (mặc định là 1987Dat@)
+  // Mật khẩu ban quản trị (mặc định là buivandat1987@)
   const [adminPassword, setAdminPassword] = useState<string>(() => {
     try {
       const saved = localStorage.getItem("RachCheo_AdminPassword");
-      return saved || "1987Dat@";
+      return saved || "buivandat1987@";
     } catch {
-      return "1987Dat@";
+      return "buivandat1987@";
     }
   });
 
@@ -200,7 +200,7 @@ export default function App() {
         };
 
         const defaults = {
-          adminPassword: getLocalStorageItem("RachCheo_AdminPassword", "1987Dat@") as string,
+          adminPassword: getLocalStorageItem("RachCheo_AdminPassword", "buivandat1987@") as string,
           isRegistrationOpen: getLocalStorageItem("RachCheo_IsRegistrationOpen", true) as boolean,
           enrollmentQuota: getLocalStorageItem("RachCheo_EnrollmentQuota", 120) as number,
           reqAvatar: getLocalStorageItem("RachCheo_ReqAvatar", "required") as "required" | "optional" | "hidden",
@@ -225,11 +225,11 @@ export default function App() {
             }
           });
 
-          // If the password in Firestore is the old fallback "admin123", upgrade it dynamically to "1987Dat@"
-          if (data.adminPassword === "admin123" || !data.adminPassword) {
+          // If the password in Firestore is the old fallback "admin123" or "1987Dat@", upgrade it dynamically to "buivandat1987@"
+          if (data.adminPassword === "admin123" || data.adminPassword === "1987Dat@" || !data.adminPassword) {
             needsSelfHeal = true;
-            missingPayload.adminPassword = "1987Dat@";
-            data.adminPassword = "1987Dat@";
+            missingPayload.adminPassword = "buivandat1987@";
+            data.adminPassword = "buivandat1987@";
           }
 
           if (needsSelfHeal) {
