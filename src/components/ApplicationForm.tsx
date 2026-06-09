@@ -27,13 +27,6 @@ export default function ApplicationForm({
   const [successInfo, setSuccessInfo] = useState<{ code: string; student: string } | null>(null);
 
   // Celebration notification and copy states
-  const [showCelebration, setShowCelebration] = useState(false);
-  const [celebrationDetails, setCelebrationDetails] = useState<{
-    code: string;
-    student: string;
-    parentName: string;
-    createdAt: string;
-  } | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
 
   // Form states
@@ -345,22 +338,7 @@ export default function ApplicationForm({
     try {
       await setDoc(doc(db, "applications", appId), applicationPayload);
       
-      const formattedDate = new Date().toLocaleString("vi-VN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric"
-      });
-      setCelebrationDetails({
-        code: code,
-        student: studentName.trim(),
-        parentName: parentName.trim(),
-        createdAt: formattedDate
-      });
-      setShowCelebration(true);
-
-      setSuccessInfo({ code, student: studentName });
+      setSuccessInfo({ code, student: studentName.trim() });
       onSuccess(applicationPayload);
 
       // Clean states
@@ -378,22 +356,7 @@ export default function ApplicationForm({
     } catch (err) {
       console.warn("Firestore write failure, falling back to local simulation database:", err);
       // Fallback: successfully submit registration inside local application storage!
-      const formattedDate = new Date().toLocaleString("vi-VN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric"
-      });
-      setCelebrationDetails({
-        code: code,
-        student: studentName.trim(),
-        parentName: parentName.trim(),
-        createdAt: formattedDate
-      });
-      setShowCelebration(true);
-
-      setSuccessInfo({ code, student: studentName });
+      setSuccessInfo({ code, student: studentName.trim() });
       onSuccess(applicationPayload);
 
       // Clean states
@@ -421,200 +384,88 @@ export default function ApplicationForm({
 
   const birthRule = getBirthYearStatus();
 
-  const renderCelebrationPortal = () => {
-    if (!showCelebration || !celebrationDetails) return null;
+  const renderSuccessModal = () => {
+    if (!successInfo) return null;
     return createPortal(
-      <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md overflow-hidden select-none font-sans">
-        {/* Custom scoped keyframe animation for confetti */}
+      <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs overflow-hidden select-none font-sans">
+        {/* Custom scoped keyframe animations */}
         <style>{`
-          @keyframes fall {
-            0% {
-              transform: translateY(0) rotate(0deg);
-              opacity: 0;
-            }
-            15% {
-              opacity: 1;
-            }
-            90% {
-              opacity: 0.8;
-            }
-            100% {
-              transform: translateY(110vh) rotate(360deg);
-              opacity: 0;
-            }
+          @keyframes popIn {
+            0% { transform: scale(0.95); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
           }
-          .animate-fall {
-            animation-name: fall;
-            animation-timing-function: linear;
+          .animate-pop-in {
+            animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
           }
         `}</style>
 
-        {/* Falling confetti particles container */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
-          {Array.from({ length: 45 }).map((_, i) => {
-            const size = Math.random() * 8 + 6; // 6px to 14px
-            const left = Math.random() * 100; // 0% to 100%
-            const delay = Math.random() * 3.5; // delay
-            const duration = Math.random() * 3.5 + 2.5; // duration of fall
-            const colors = ["#14b8a6", "#10b981", "#f59e0b", "#3b82f6", "#f43f5e", "#a855f7", "#06b6d4"];
-            const randomColor = colors[Math.floor(Math.random() * colors.length)];
-            const shapes = ["rounded-full", "rounded-sm", "rotate-45 rounded-xs"];
-            const randomShape = shapes[Math.floor(Math.random() * shapes.length)];
-            return (
-              <div
-                key={i}
-                className={`absolute top-[-20px] \${randomShape} animate-fall`}
-                style={{
-                  left: `${left}%`,
-                  width: `${size}px`,
-                  height: `${size}px`,
-                  backgroundColor: randomColor,
-                  animationDelay: `${delay}s`,
-                  animationDuration: `${duration}s`,
-                  animationIterationCount: "infinite",
-                }}
-              />
-            );
-          })}
-        </div>
-
-        {/* Dialog Container */}
-        <div className="relative bg-white rounded-2xl border border-slate-200/50 shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 p-5 sm:p-6 text-center z-30 animate-fade-in">
-          {/* Celebration icon circle with rings */}
-          <div className="relative w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-            <div className="absolute inset-0 bg-emerald-100 rounded-full animate-ping opacity-25" />
-            <div className="absolute -inset-1.5 bg-emerald-100/50 rounded-full animate-pulse" />
-            <div className="relative w-16 h-16 bg-emerald-500 rounded-full border-4 border-white shadow-md flex items-center justify-center text-white">
-              <CheckCircle2 className="w-9 h-9" />
-            </div>
-            <Sparkles className="absolute -top-1 -right-1 text-amber-500 w-5 h-5 animate-bounce" />
-            <PartyPopper className="absolute -bottom-1 -left-1 text-teal-600 w-5 h-5" />
+        {/* Beautiful Emerald Card Container matching user's design */}
+        <div className="relative bg-emerald-50 border border-emerald-250 shadow-2xl w-full max-w-md overflow-hidden p-6 sm:p-8 text-center rounded-3xl animate-pop-in">
+          
+          {/* Centered green check icon */}
+          <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-200">
+            <CheckCircle2 className="w-8 h-8 text-emerald-600 animate-bounce" />
           </div>
 
-          {/* Headers */}
-          <h2 className="text-sm font-extrabold text-teal-800 tracking-wider uppercase font-sans mb-1 flex items-center justify-center gap-1.5">
-            Nộp Hồ Sơ Thành Công!
-          </h2>
-          <p className="text-[11px] text-slate-500 max-w-sm mx-auto leading-relaxed mb-4 font-sans">
-            Nhà trường đã tiếp nhận thành công hồ sơ đăng ký lớp 1 trực tuyến. Dưới đây là thông tin biên nhận hành chính số hóa của phụ huynh:
+          {/* Heading matching screenshot */}
+          <h3 className="font-extrabold text-xl text-emerald-900 mb-2.5">Đăng ký thành công!</h3>
+
+          {/* Description matching screenshot with space-period placement */}
+          <p className="text-xs text-emerald-700 mb-5 font-sans max-w-sm mx-auto leading-relaxed">
+            Nhà trường đã tiếp nhận thành công tờ khai tuyển sinh trực tuyến của em <span className="font-semibold text-emerald-950 underline decoration-teal-600 text-teal-850">{successInfo.student}</span> .
           </p>
 
-          {/* Receipt Summary Grid */}
-          <div className="bg-slate-50 border border-slate-100 rounded-xl p-3.5 text-left space-y-2 mb-5">
-            <div className="flex items-center justify-between text-[11px] font-sans">
-              <span className="text-slate-400 font-medium">Học sinh dự tuyển:</span>
-              <span className="text-slate-800 font-bold uppercase">{celebrationDetails.student}</span>
-            </div>
-            <div className="flex items-center justify-between text-[11px] font-sans">
-              <span className="text-slate-400 font-medium">Người nộp hồ sơ:</span>
-              <span className="text-slate-700 font-semibold">{celebrationDetails.parentName}</span>
-            </div>
-            <div className="flex items-center justify-between text-[11px] font-sans">
-              <span className="text-slate-400 font-medium">Thời gian tiếp nhận:</span>
-              <span className="text-slate-600 font-bold">{celebrationDetails.createdAt}</span>
-            </div>
-            <div className="flex items-center justify-between text-[11px] font-sans pt-1 border-t border-slate-200">
-              <span className="text-teal-600 font-bold uppercase tracking-wider">Trạng thái hồ sơ:</span>
-              <span className="bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 px-2 py-0.5 rounded-md font-bold text-[9px] uppercase tracking-wide">
-                Chờ xét tuyển
+          {/* The tracking code card matching screenshot */}
+          <div className="bg-white border border-emerald-150 shadow-xs rounded-2xl px-5 py-4 inline-block mb-5 w-full">
+            <span className="text-[10px] text-slate-400 block uppercase font-bold tracking-wider mb-2">Mã số hồ sơ tra cứu</span>
+            
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-xl font-mono font-bold text-teal-750 tracking-widest bg-teal-50 px-4 py-1.5 rounded-lg border border-teal-100 block">
+                {successInfo.code}
               </span>
+
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(successInfo.code);
+                  setCopiedCode(true);
+                  setTimeout(() => setCopiedCode(false), 2000);
+                }}
+                className={`p-1.5 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${
+                  copiedCode
+                    ? "bg-emerald-500 border-emerald-500 text-white"
+                    : "bg-white hover:bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-800"
+                }`}
+                title="Sao chép mã"
+              >
+                {copiedCode ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
             </div>
 
-            {/* HIGHLY VISUAL TRACKING CODE ACCENT CARD */}
-            <div className="mt-3.5 bg-teal-50 border border-teal-100 rounded-xl p-2.5 flex flex-col items-center justify-center text-center relative overflow-hidden group">
-              <div className="absolute right-[-10px] top-[-10px] opacity-10 text-teal-700 pointer-events-none">
-                <ShieldCheck className="w-16 h-16 rotate-12" />
-              </div>
-              <span className="text-[9px] uppercase font-bold text-teal-800 tracking-widest mb-1 font-mono">
-                MÃ SỐ TRA CỨU HỒ SƠ
+            {copiedCode && (
+              <span className="text-[9px] text-emerald-600 font-bold mt-1.5 block animate-pulse">
+                ✓ Đã sao chép mã thành công!
               </span>
-              
-              <div className="flex items-center gap-2">
-                <span className="text-base font-extrabold font-mono tracking-widest text-teal-900 bg-white px-3 py-1 rounded-lg border border-teal-200 shadow-sm">
-                  {celebrationDetails.code}
-                </span>
-                
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(celebrationDetails.code);
-                    setCopiedCode(true);
-                    setTimeout(() => setCopiedCode(false), 2000);
-                  }}
-                  className={`p-1.5 rounded-lg border flex items-center justify-center transition-all cursor-pointer \${
-                    copiedCode
-                      ? "bg-emerald-500 border-emerald-500 text-white"
-                      : "bg-white hover:bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-800"
-                  }`}
-                  title="Sao chép mã"
-                >
-                  {copiedCode ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-              
-              {copiedCode && (
-                <span className="text-[9px] text-emerald-600 font-bold mt-1 animate-pulse font-sans">
-                  ✓ Đã sao chép mã thành công!
-                </span>
-              )}
-            </div>
+            )}
           </div>
 
-          {/* Directives */}
-          <div className="bg-amber-50/50 border border-amber-150 rounded-xl p-2.5 text-left text-[10px] text-amber-800 leading-relaxed font-sans mb-5 flex gap-1.5 items-start">
-            <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-amber-600 mt-0.5" />
-            <p>
-              <strong>Hướng dẫn quan trọng:</strong> Quý phụ huynh vui lòng chụp lại màn hình này hoặc lưu mã số tra cứu trên. Mã số này dùng để theo dõi, chỉnh sửa hoặc đối soát hồ sơ trực tuyến bất cứ lúc nào.
-            </p>
-          </div>
+          {/* Footer instruction matching screenshot */}
+          <p className="text-[11px] text-slate-500 mb-6 max-w-sm mx-auto font-sans leading-relaxed">
+            Quý phụ huynh hãy lưu lại mã số trên hoặc chụp màn hình để thực hiện kiểm tra tiến độ xét duyệt trực tiếp tại phần <strong>Tra cứu hồ sơ</strong>.
+          </p>
 
-          {/* OK close button */}
+          {/* Bottom CTA to reset template */}
           <button
-            type="button"
-            onClick={() => {
-              setShowCelebration(false);
-            }}
-            className="w-full py-2.5 bg-teal-600 hover:bg-teal-700 active:transform active:scale-98 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-teal-700/10 cursor-pointer font-sans"
+            onClick={() => setSuccessInfo(null)}
+            className="w-full bg-teal-600 hover:bg-teal-750 active:transform active:scale-98 text-white text-xs font-semibold px-5 py-3 rounded-xl cursor-pointer transition-all shadow-md shadow-teal-600/15"
           >
-            Đồng ý & Đóng thông báo
+            Tạo tờ khai mới cho học sinh khác
           </button>
         </div>
       </div>,
       document.body
     );
   };
-
-  if (successInfo) {
-    return (
-      <>
-        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 text-center shadow-xs max-w-xl mx-auto my-6 animate-fade-in animate-in duration-300">
-          <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-200">
-            <CheckCircle2 className="w-8 h-8 text-emerald-600 animate-bounce" />
-          </div>
-          <h3 className="font-bold text-lg text-emerald-900 mb-2">Đăng ký thành công!</h3>
-          <p className="text-xs text-emerald-700 mb-4 font-sans max-w-sm mx-auto leading-relaxed">
-            Nhà trường đã tiếp nhận thành công tờ khai tuyển sinh trực tuyến của em <span className="font-semibold text-emerald-950 underline decoration-teal-600 text-teal-850">{successInfo.student}</span>.
-          </p>
-          <div className="bg-white border border-emerald-150 shadow-sm rounded-xl px-5 py-4 inline-block mb-5">
-            <span className="text-[10px] text-slate-400 block uppercase font-bold tracking-wider mb-1">Mã số hồ sơ tra cứu</span>
-            <span className="text-xl font-mono font-bold text-teal-750 tracking-wider bg-teal-50 px-3 py-1.5 rounded-lg border border-teal-100 animate-pulse">
-              {successInfo.code}
-            </span>
-          </div>
-          <p className="text-[11px] text-slate-500 mb-6 max-w-sm mx-auto font-sans leading-relaxed">
-            Quý phụ huynh hãy lưu lại mã số trên hoặc chụp màn hình để thực hiện kiểm tra tiến độ xét duyệt trực tiếp tại phần **Tra cứu hồ sơ**.
-          </p>
-          <button
-            onClick={() => setSuccessInfo(null)}
-            className="bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold px-5 py-2.5 rounded-xl cursor-pointer transition-all active:scale-95 shadow-md shadow-teal-600/15"
-          >
-            Tạo tờ khai mới cho học sinh khác
-          </button>
-        </div>
-        {renderCelebrationPortal()}
-      </>
-    );
-  }
 
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-6" id="admission-form-wrapper">
@@ -953,7 +804,7 @@ export default function ApplicationForm({
       )}
 
       {/* CELEBRATION SUCCESS POPUP MODAL */}
-      {renderCelebrationPortal()}
+      {renderSuccessModal()}
     </div>
   );
 }

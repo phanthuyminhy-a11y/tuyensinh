@@ -542,8 +542,7 @@ export default function App() {
       return [...prev, newApp.id];
     });
 
-    // Redirect to parent tracking view so they instantly see progress!
-    setActiveTab("track");
+    // Do NOT redirect immediately so parents can read the beautiful success notification modal!
   };
 
   // Handle reactive updates (acting as upsert for searched documents)
