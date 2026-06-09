@@ -133,6 +133,18 @@ export default function ApplicationForm({
     };
   }, []);
 
+  // Lock background scrolling on mobile when camera is active
+  useEffect(() => {
+    if (isCameraActive) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isCameraActive]);
+
   const startCameraCapture = () => {
     setIsCameraActive(true);
   };
@@ -614,10 +626,10 @@ export default function ApplicationForm({
 
       {/* CAMERA CAPTURE MODAL */}
       {isCameraActive && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-xs transition-opacity duration-300">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-100 flex flex-col overflow-hidden max-h-[92vh] animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 xs:p-3 sm:p-4 bg-slate-900/85 backdrop-blur-xs transition-opacity duration-300">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-100 flex flex-col overflow-hidden max-h-[95vh] sm:max-h-[90vh] animate-in fade-in duration-200">
             {/* Header */}
-            <div className="bg-slate-50 px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+            <div className="bg-slate-50 px-3 py-2.5 sm:px-4 sm:py-3 border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Camera className="w-4 h-4 text-teal-600 animate-pulse" />
                 <h3 className="text-xs font-bold text-slate-800 font-sans uppercase tracking-wider">
@@ -634,9 +646,9 @@ export default function ApplicationForm({
             </div>
 
             {/* Video preview arena */}
-            <div className="relative bg-slate-950 flex-1 flex flex-col items-center justify-center min-h-[280px]">
+            <div className="relative bg-slate-950 flex-1 flex flex-col items-center justify-center min-h-[180px] sm:min-h-[240px]">
               {cameraError ? (
-                <div className="p-6 text-center flex flex-col items-center justify-center gap-3">
+                <div className="p-4 text-center flex flex-col items-center justify-center gap-3">
                   <AlertTriangle className="w-8 h-8 text-amber-500 animate-bounce" />
                   <p className="text-xs text-slate-300 font-sans font-medium px-4 leading-relaxed">
                     {cameraError}
@@ -659,10 +671,10 @@ export default function ApplicationForm({
                     autoPlay
                     playsInline
                     muted
-                    className="w-full object-cover aspect-[4/3] max-h-[360px]"
+                    className="w-full object-cover aspect-video sm:aspect-[4/3] max-h-[220px] sm:max-h-[300px]"
                   />
                   {/* Photo guide overlay box */}
-                  <div className="absolute inset-x-8 inset-y-6 border-2 border-dashed border-teal-400/60 rounded-xl pointer-events-none flex flex-col items-center justify-between p-4 bg-transparent">
+                  <div className="absolute inset-x-6 inset-y-4 sm:inset-x-8 sm:inset-y-6 border-2 border-dashed border-teal-400/60 rounded-xl pointer-events-none flex flex-col items-center justify-between p-3 sm:p-4 bg-transparent">
                     <div className="text-[9px] uppercase font-bold text-teal-300 bg-slate-950/60 px-2 py-0.5 rounded-sm tracking-widest font-sans">
                       Giấy khai sinh
                     </div>
@@ -675,7 +687,7 @@ export default function ApplicationForm({
             </div>
 
             {/* Camera settings & Trigger controls */}
-            <div className="p-4 bg-slate-50 border-t border-slate-100 flex flex-col gap-3">
+            <div className="p-3 xs:p-4 bg-slate-50 border-t border-slate-100 flex flex-col gap-2.5">
               {/* Option to switch between dual cameras */}
               {cameraDevices.length > 1 && (
                 <div className="flex items-center justify-between gap-2 bg-white px-2.5 py-1.5 rounded-xl border border-slate-200">
@@ -695,7 +707,7 @@ export default function ApplicationForm({
               )}
 
               {/* Action buttons */}
-              <div className="flex items-center justify-between gap-2.5 mt-1">
+              <div className="flex items-center justify-between gap-2.5">
                 <button
                   type="button"
                   onClick={stopCamera}
@@ -707,7 +719,7 @@ export default function ApplicationForm({
                   type="button"
                   disabled={!!cameraError}
                   onClick={capturePhoto}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-teal-700/10 cursor-pointer font-sans"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-teal-700/10 cursor-pointer font-sans"
                 >
                   <Camera className="w-4 h-4" />
                   Chụp ngay lập tức
