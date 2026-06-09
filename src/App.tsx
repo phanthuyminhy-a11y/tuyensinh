@@ -212,7 +212,8 @@ export default function App() {
           reqResidenceCert: getLocalStorageItem("RachCheo_ReqResidenceCert", "required") as "required" | "optional" | "hidden",
           contactHotline: getLocalStorageItem("RachCheo_ContactHotline", "0290.3888.222") as string,
           contactEmail: getLocalStorageItem("RachCheo_ContactEmail", "th.rachcheo@phutun.edu.vn") as string,
-          contactAddress: getLocalStorageItem("RachCheo_ContactAddress", "Ấp Rạch Chèo, Xã Nguyễn Việt Khái, Tỉnh Cà Mau") as string
+          contactAddress: getLocalStorageItem("RachCheo_ContactAddress", "Ấp Rạch Chèo, Xã Nguyễn Việt Khái, Tỉnh Cà Mau") as string,
+          isAnnouncementsSeeded: false
         };
 
         if (snapshot.exists()) {
@@ -234,6 +235,26 @@ export default function App() {
             needsSelfHeal = true;
             missingPayload.adminPassword = "buivandat1987@";
             data.adminPassword = "buivandat1987@";
+          }
+
+          // If announcements are not seeded in Firestore, seed them now
+          if (!data.isAnnouncementsSeeded) {
+            const seedAnnouncements = async () => {
+              try {
+                for (const ann of defaultAnnouncements) {
+                  await setDoc(doc(db, "announcements", ann.id), ann);
+                }
+                await setDoc(configDocRef, { isAnnouncementsSeeded: true }, { merge: true });
+                try {
+                  localStorage.setItem("RachCheo_Announcements_Seeded", "true");
+                } catch (e) {
+                  console.warn(e);
+                }
+              } catch (e) {
+                console.error("Failed to seed default announcements:", e);
+              }
+            };
+            seedAnnouncements();
           }
 
           if (needsSelfHeal) {
@@ -435,11 +456,23 @@ export default function App() {
           setAnnouncements(fetchedList);
           try {
             localStorage.setItem("RachCheo_Announcements", JSON.stringify(fetchedList));
+            localStorage.setItem("RachCheo_Announcements_Seeded", "true");
           } catch (e) {
             console.warn(e);
           }
         } else {
-          setAnnouncements(defaultAnnouncements);
+          // Check if we have seeded announcements already. If seeded, empty list is a valid deletion
+          const localSeeded = localStorage.getItem("RachCheo_Announcements_Seeded") === "true";
+          if (localSeeded) {
+            setAnnouncements([]);
+            try {
+              localStorage.setItem("RachCheo_Announcements", JSON.stringify([]));
+            } catch (e) {
+              console.warn(e);
+            }
+          } else {
+            setAnnouncements(defaultAnnouncements);
+          }
         }
       }, (error) => {
         // Fallback silently
