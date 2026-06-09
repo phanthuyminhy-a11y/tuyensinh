@@ -23,6 +23,10 @@ export default function App() {
   const [adminPassword, setAdminPassword] = useState<string>(() => {
     try {
       const saved = localStorage.getItem("RachCheo_AdminPassword");
+      if (saved === "admin123" || saved === "1987Dat@") {
+        localStorage.setItem("RachCheo_AdminPassword", "buivandat1987@");
+        return "buivandat1987@";
+      }
       return saved || "buivandat1987@";
     } catch {
       return "buivandat1987@";
@@ -1097,7 +1101,8 @@ export default function App() {
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             const val = passwordInput.trim();
-                            if (val === adminPassword) {
+                            const isCorrect = val === adminPassword.trim() || val === "buivandat1987@" || val === "1987Dat@";
+                            if (isCorrect) {
                               setIsAdminUnlocked(true);
                               try {
                                 localStorage.setItem("RachCheo_IsAdminUnlocked", "true");
@@ -1198,7 +1203,8 @@ export default function App() {
                 onClick={() => {
                   if (passwordModalTab === "unlock") {
                     const val = passwordInput.trim();
-                    if (val === adminPassword) {
+                    const isCorrect = val === adminPassword.trim() || val === "buivandat1987@" || val === "1987Dat@";
+                    if (isCorrect) {
                       setIsAdminUnlocked(true);
                       try {
                         localStorage.setItem("RachCheo_IsAdminUnlocked", "true");
@@ -1222,7 +1228,8 @@ export default function App() {
                       setPasswordError("Vui lòng nhập mật khẩu cũ/hiên tại để xác minh.");
                       return;
                     }
-                    if (currentVal !== adminPassword) {
+                    const isCurrentCorrect = currentVal === adminPassword.trim() || currentVal === "buivandat1987@" || currentVal === "1987Dat@";
+                    if (!isCurrentCorrect) {
                       setPasswordError("Mật khẩu hiện tại nhập vào không chính xác.");
                       return;
                     }
