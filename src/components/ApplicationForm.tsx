@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { UserPlus, Upload, ShieldCheck, CheckCircle2, AlertTriangle, RefreshCw, FileText, Camera, MapPin } from "lucide-react";
 import { ApplicationStatus, AdmissionApplication } from "../types";
 import { db, handleFirestoreError, OperationType } from "../firebase";
@@ -573,9 +574,22 @@ export default function ApplicationForm({
                 </div>
                 <div className="w-full mt-3">
                   {birthCertUrl ? (
-                    <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-lg p-1.5 px-3">
-                      <span className="text-[10px] text-emerald-800 text-ellipsis overflow-hidden whitespace-nowrap max-w-[200px] font-sans">{birthCertName || "giay-khai-sinh.jpg"}</span>
-                      <button type="button" onClick={() => { setBirthCertUrl(""); setBirthCertName(""); }} className="text-[10px] text-rose-500 hover:underline">Xoá</button>
+                    <div className="flex flex-col gap-2.5 w-full">
+                      <div className="relative w-full h-44 bg-slate-150 rounded-xl overflow-hidden border border-slate-200 shadow-inner flex items-center justify-center">
+                        <img
+                          src={birthCertUrl}
+                          alt="Bản chụp giấy khai sinh"
+                          className="w-full h-full object-contain bg-slate-900"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="absolute top-2 right-2 bg-slate-950/70 text-white text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wide">
+                          Xem trước
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-lg p-2 px-3">
+                        <span className="text-[10px] text-emerald-800 text-ellipsis overflow-hidden whitespace-nowrap max-w-[200px] font-sans font-medium">{birthCertName || "giay-khai-sinh.jpg"}</span>
+                        <button type="button" onClick={() => { setBirthCertUrl(""); setBirthCertName(""); }} className="text-[10px] text-rose-600 hover:text-rose-700 font-bold hover:underline">Xoá ảnh</button>
+                      </div>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
@@ -624,12 +638,12 @@ export default function ApplicationForm({
         </div>
       </form>
 
-      {/* CAMERA CAPTURE MODAL */}
-      {isCameraActive && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 xs:p-3 sm:p-4 bg-slate-900/85 backdrop-blur-xs transition-opacity duration-300">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-100 flex flex-col overflow-hidden max-h-[95vh] sm:max-h-[90vh] animate-in fade-in duration-200">
+      {/* CAMERA CAPTURE MODAL - MOUNTED TO document.body VIA REACT PORTAL */}
+      {isCameraActive && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-hidden select-none animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 flex flex-col overflow-hidden max-h-[90vh] animate-in zoom-in-95 duration-200 my-auto">
             {/* Header */}
-            <div className="bg-slate-50 px-3 py-2.5 sm:px-4 sm:py-3 border-b border-slate-100 flex items-center justify-between">
+            <div className="bg-slate-50 px-4 py-3 sm:px-5 sm:py-3.5 border-b border-slate-150 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Camera className="w-4 h-4 text-teal-600 animate-pulse" />
                 <h3 className="text-xs font-bold text-slate-800 font-sans uppercase tracking-wider">
@@ -639,16 +653,16 @@ export default function ApplicationForm({
               <button
                 type="button"
                 onClick={stopCamera}
-                className="text-slate-400 hover:text-slate-600 text-xs font-medium cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer bg-slate-200/50 hover:bg-slate-200/80 px-2 py-1 rounded-lg transition-colors"
               >
                 Đóng ✕
               </button>
             </div>
 
             {/* Video preview arena */}
-            <div className="relative bg-slate-950 flex-1 flex flex-col items-center justify-center min-h-[180px] sm:min-h-[240px]">
+            <div className="relative bg-slate-950 flex-1 flex flex-col items-center justify-center min-h-[220px]">
               {cameraError ? (
-                <div className="p-4 text-center flex flex-col items-center justify-center gap-3">
+                <div className="p-6 text-center flex flex-col items-center justify-center gap-3">
                   <AlertTriangle className="w-8 h-8 text-amber-500 animate-bounce" />
                   <p className="text-xs text-slate-300 font-sans font-medium px-4 leading-relaxed">
                     {cameraError}
@@ -665,37 +679,37 @@ export default function ApplicationForm({
                   </button>
                 </div>
               ) : (
-                <>
+                <div className="relative w-full flex items-center justify-center overflow-hidden bg-black aspect-[4/3]">
                   <video
                     ref={videoRef}
                     autoPlay
                     playsInline
                     muted
-                    className="w-full object-cover aspect-video sm:aspect-[4/3] max-h-[220px] sm:max-h-[300px]"
+                    className="w-full h-full object-contain block bg-black"
                   />
                   {/* Photo guide overlay box */}
-                  <div className="absolute inset-x-6 inset-y-4 sm:inset-x-8 sm:inset-y-6 border-2 border-dashed border-teal-400/60 rounded-xl pointer-events-none flex flex-col items-center justify-between p-3 sm:p-4 bg-transparent">
-                    <div className="text-[9px] uppercase font-bold text-teal-300 bg-slate-950/60 px-2 py-0.5 rounded-sm tracking-widest font-sans">
+                  <div className="absolute inset-6 xs:inset-8 border-2 border-dashed border-teal-400/65 rounded-xl pointer-events-none flex flex-col items-center justify-between p-4 bg-transparent z-10">
+                    <div className="text-[9px] uppercase font-bold text-teal-300 bg-slate-950/70 px-2.5 py-0.5 rounded-sm tracking-widest font-sans">
                       Giấy khai sinh
                     </div>
-                    <div className="text-[8px] font-medium text-slate-300 text-center bg-slate-950/60 px-2 py-0.5 rounded-sm leading-relaxed max-w-[220px]">
-                      Đặt chính diện, thẳng thắn, tránh bóng mờ/lóa
+                    <div className="text-[8px] font-medium text-slate-200 text-center bg-slate-950/70 px-2 py-0.5 rounded-sm leading-relaxed max-w-[200px]">
+                      Đặt chính diện, thẳng thắn trong khung hình, tránh loá sáng
                     </div>
                   </div>
-                </>
+                </div>
               )}
             </div>
 
             {/* Camera settings & Trigger controls */}
-            <div className="p-3 xs:p-4 bg-slate-50 border-t border-slate-100 flex flex-col gap-2.5">
+            <div className="p-4 bg-slate-50 border-t border-slate-150 flex flex-col gap-3">
               {/* Option to switch between dual cameras */}
               {cameraDevices.length > 1 && (
-                <div className="flex items-center justify-between gap-2 bg-white px-2.5 py-1.5 rounded-xl border border-slate-200">
-                  <label className="text-[10px] font-bold text-slate-500 shrink-0 font-sans">Chọn ống kính:</label>
+                <div className="flex items-center justify-between gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200">
+                  <label className="text-[10px] font-bold text-slate-500 shrink-0 font-sans uppercase">Chọn ống kính:</label>
                   <select
                     value={activeCameraId}
                     onChange={(e) => switchCamera(e.target.value)}
-                    className="text-[10px] bg-transparent outline-none text-slate-700 w-full max-w-[200px] text-right font-sans cursor-pointer font-medium"
+                    className="text-[10px] bg-transparent outline-none text-slate-800 w-full max-w-[220px] text-right font-sans cursor-pointer font-bold"
                   >
                     {cameraDevices.map((device, i) => (
                       <option key={device.deviceId} value={device.deviceId}>
@@ -707,19 +721,19 @@ export default function ApplicationForm({
               )}
 
               {/* Action buttons */}
-              <div className="flex items-center justify-between gap-2.5">
+              <div className="flex items-center justify-between gap-3">
                 <button
                   type="button"
                   onClick={stopCamera}
-                  className="px-4 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-all cursor-pointer font-sans shadow-xs"
+                  className="px-4 py-2.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-all cursor-pointer font-sans shadow-xs"
                 >
-                  Huỷ
+                  Huỷ bỏ
                 </button>
                 <button
                   type="button"
                   disabled={!!cameraError}
                   onClick={capturePhoto}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-teal-700/10 cursor-pointer font-sans"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-teal-700/10 cursor-pointer font-sans"
                 >
                   <Camera className="w-4 h-4" />
                   Chụp ngay lập tức
@@ -727,7 +741,8 @@ export default function ApplicationForm({
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
