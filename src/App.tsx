@@ -119,12 +119,18 @@ export default function App() {
   // All applications pulled in real-time
   const [applications, setApplications] = useState<AdmissionApplication[]>([]);
   const [appsLoading, setAppsLoading] = useState(true);
-  const [activeAnnouncement, setActiveAnnouncement] = useState<string | null>("ann-1");
+  const [activeAnnouncement, setActiveAnnouncement] = useState<string | null>(null);
 
   const [announcements, setAnnouncements] = useState<SchoolAnnouncement[]>(() => {
     try {
       const saved = localStorage.getItem("RachCheo_Announcements");
-      return saved ? JSON.parse(saved) : defaultAnnouncements;
+      if (saved) {
+        const parsed = JSON.parse(saved) as SchoolAnnouncement[];
+        return parsed.filter(
+          (ann) => ann.id !== "ann-1" && ann.id !== "ann-2" && ann.id !== "ann-3"
+        );
+      }
+      return defaultAnnouncements;
     } catch {
       return defaultAnnouncements;
     }
@@ -133,9 +139,9 @@ export default function App() {
   const [contactHotline, setContactHotline] = useState<string>(() => {
     try {
       const saved = localStorage.getItem("RachCheo_ContactHotline");
-      return saved || "0290.3888.222";
+      return saved || "0917.387.408";
     } catch {
-      return "0290.3888.222";
+      return "0917.387.408";
     }
   });
 
@@ -204,12 +210,15 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // Force delete demo/mock students permanently from Firestore
+  // Force delete demo/mock students and deleted announcements permanently from Firestore
   useEffect(() => {
     const handleCleanupDemoDocs = async () => {
       try {
         await deleteDoc(doc(db, "applications", "app_53812_demo"));
         await deleteDoc(doc(db, "applications", "app_19204_demo"));
+        await deleteDoc(doc(db, "announcements", "ann-1"));
+        await deleteDoc(doc(db, "announcements", "ann-2"));
+        await deleteDoc(doc(db, "announcements", "ann-3"));
       } catch (err) {
         console.warn("Silent clean demo docs error:", err);
       }
