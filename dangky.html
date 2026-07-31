@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Đăng ký tuyển sinh lớp 1 — TH Rạch Chèo</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a href="index.html" class="brand">
+      <span class="brand__badge">TH</span>
+      <span class="brand__text"><b>TH Rạch Chèo</b><span>Xã Nguyễn Việt Khái, Cà Mau</span></span>
+    </a>
+    <nav class="nav">
+      <a href="index.html">Trang chủ</a>
+      <a href="dangky.html" class="active">Đăng ký</a>
+      <a href="tracuu.html">Tra cứu hồ sơ</a>
+      <a href="admin.html">Quản trị</a>
+    </nav>
+  </div>
+</header>
+
+<section class="page-banner" data-banner-el>
+  <div class="page-banner__inner">
+    <span class="eyebrow">Phiếu đăng ký</span>
+    <h1>Đăng ký tuyển sinh lớp 1</h1>
+    <p>Vui lòng điền đầy đủ, chính xác thông tin. Các mục có dấu <span style="color:var(--nang-phusa)">*</span> là bắt buộc.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="form-wrap">
+    <div id="msg-dong-ts" class="form-msg err" style="display:none;"></div>
+    <div id="msg" class="form-msg"></div>
+
+    <form id="form-dangky">
+      <fieldset>
+        <legend>1. Thông tin học sinh</legend>
+        <div class="field-row">
+          <div class="field">
+            <label>Họ và tên học sinh <span class="req">*</span></label>
+            <input type="text" name="hoTenHocSinh" required placeholder="Nguyễn Văn A">
+          </div>
+          <div class="field">
+            <label>Ngày sinh <span class="req">*</span></label>
+            <div class="ngay-sinh-group">
+              <select name="ngaySinhNgay" required aria-label="Ngày"><option value="">Ngày</option></select>
+              <select name="ngaySinhThang" required aria-label="Tháng"><option value="">Tháng</option></select>
+              <select name="ngaySinhNam" required aria-label="Năm"><option value="">Năm</option></select>
+            </div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Giới tính <span class="req">*</span></label>
+            <div class="radio-group">
+              <label><input type="radio" name="gioiTinh" value="Nam" required> Nam</label>
+              <label><input type="radio" name="gioiTinh" value="Nữ"> Nữ</label>
+            </div>
+          </div>
+          <div class="field">
+            <label>Dân tộc</label>
+            <input type="text" name="danToc" placeholder="Kinh">
+          </div>
+        </div>
+        <div class="field">
+          <label>Nơi sinh</label>
+          <input type="text" name="noiSinh" placeholder="Bệnh viện / xã, huyện, tỉnh">
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>2. Thông tin phụ huynh</legend>
+        <div class="field-row">
+          <div class="field">
+            <label>Họ tên cha</label>
+            <input type="text" name="hoTenCha" placeholder="Họ và tên">
+          </div>
+          <div class="field">
+            <label>Số điện thoại cha</label>
+            <input type="tel" name="sdtCha" placeholder="09xxxxxxxx">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Họ tên mẹ</label>
+            <input type="text" name="hoTenMe" placeholder="Họ và tên">
+          </div>
+          <div class="field">
+            <label>Số điện thoại mẹ</label>
+            <input type="tel" name="sdtMe" placeholder="09xxxxxxxx">
+          </div>
+        </div>
+        <div class="field">
+          <label>Số điện thoại liên hệ chính <span class="req">*</span></label>
+          <input type="tel" name="sdtLienHe" required placeholder="Dùng để tra cứu hồ sơ sau này" pattern="[0-9]{9,11}">
+          <small>Số này sẽ dùng để tra cứu kết quả hồ sơ, vui lòng nhập chính xác.</small>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>3. Nơi cư trú &amp; khu vực tuyển sinh</legend>
+        <div class="field">
+          <label>Địa chỉ thường trú <span class="req">*</span></label>
+          <input type="text" name="diaChiThuongTru" required placeholder="Số nhà/ấp, xã Nguyễn Việt Khái, Cà Mau">
+        </div>
+        <div class="field">
+          <label>Địa chỉ tạm trú (nếu khác nơi thường trú)</label>
+          <input type="text" name="diaChiTamTru" placeholder="Để trống nếu không có">
+        </div>
+        <div class="field">
+          <label>Ấp / khu vực cư trú <span class="req">*</span></label>
+          <input type="text" name="khuVuc" required placeholder="VD: Ấp Rạch Chèo, xã Nguyễn Việt Khái">
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>4. Giấy tờ đính kèm</legend>
+        <div id="khu-giay-to">
+          <p style="color:var(--muc-nhat); font-size:13.5px;">Đang tải danh sách giấy tờ cần nộp...</p>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>5. Ghi chú thêm</legend>
+        <div class="field">
+          <label>Ghi chú (không bắt buộc)</label>
+          <textarea name="ghiChu" rows="3" placeholder="Ví dụ: hoàn cảnh đặc biệt, sức khỏe cần lưu ý..."></textarea>
+        </div>
+      </fieldset>
+
+      <button type="submit" class="btn btn--dat btn--full" id="btn-submit">Nộp hồ sơ đăng ký</button>
+    </form>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <div><b data-ten-truong>Trường Tiểu học Rạch Chèo</b><br>Xã Nguyễn Việt Khái, tỉnh Cà Mau</div>
+    <div>Cổng tuyển sinh trực tuyến · Năm học <span data-nam-hoc>2026 - 2027</span></div>
+  </div>
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/main.js"></script>
+<script>
+// ---------- Kiểm tra thời gian tuyển sinh ----------
+(async function kiemTraThoiGian() {
+  try {
+    const kq = await goiApiGet('layThoiGianTuyenSinh', {});
+    if (!kq.dangMo) {
+      document.getElementById('form-dangky').style.display = 'none';
+      const box = document.getElementById('msg-dong-ts');
+      box.className = 'form-msg err show';
+      box.textContent = kq.thongBao;
+    }
+  } catch (err) {
+    // API chưa cấu hình xong thì bỏ qua, không khoá form
+  }
+})();
+
+// ---------- Tạo 3 ô chọn Ngày / Tháng / Năm ----------
+const selNgay = document.querySelector('select[name=ngaySinhNgay]');
+const selThang = document.querySelector('select[name=ngaySinhThang]');
+const selNam = document.querySelector('select[name=ngaySinhNam]');
+
+for (let i = 1; i <= 31; i++) selNgay.add(new Option(i, i));
+for (let i = 1; i <= 12; i++) selThang.add(new Option('Tháng ' + i, i));
+const namNay = new Date().getFullYear();
+// Trẻ vào lớp 1 thường 5-7 tuổi — hiển thị khoảng năm sinh phù hợp
+for (let n = namNay - 4; n >= namNay - 8; n--) selNam.add(new Option(n, n));
+
+// ---------- Tải danh sách giấy tờ cần nộp (theo cấu hình admin) ----------
+const khuGiayTo = document.getElementById('khu-giay-to');
+let cauHinhGiayToHienTai = [];
+
+async function taiDanhSachGiayTo() {
+  const macDinh = [
+    { id: 'khaiSinh', ten: 'Giấy khai sinh', batBuoc: true, an: false },
+    { id: 'cuTru', ten: 'Sổ hộ khẩu / Giấy xác nhận cư trú', batBuoc: true, an: false },
+  ];
+  try {
+    const kq = await goiApiGet('layDanhSachGiayTo', {});
+    cauHinhGiayToHienTai = kq.danhSach || macDinh;
+  } catch (err) {
+    cauHinhGiayToHienTai = macDinh; // API chưa cấu hình xong thì dùng mặc định
+  }
+  veKhuGiayTo();
+}
+
+function veKhuGiayTo() {
+  const hienThi = cauHinhGiayToHienTai.filter(gt => !gt.an);
+  khuGiayTo.innerHTML = hienThi.map(gt => `
+    <div class="field">
+      <label>${gt.ten} (ảnh/PDF) ${gt.batBuoc ? '<span class="req">*</span>' : '<small>(không bắt buộc)</small>'}</label>
+      <label class="file-drop">
+        <input type="file" data-giay-to-id="${gt.id}" accept="image/*,.pdf" ${gt.batBuoc ? 'required' : ''}>
+        <div>📎 Nhấn để chọn file — ảnh chụp hoặc PDF</div>
+        <div class="ten-file"></div>
+      </label>
+    </div>
+  `).join('');
+
+  khuGiayTo.querySelectorAll('input[type=file]').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const tenFileBox = inp.closest('.file-drop').querySelector('.ten-file');
+      tenFileBox.textContent = inp.files[0] ? `Đã chọn: ${inp.files[0].name}` : '';
+    });
+  });
+}
+
+taiDanhSachGiayTo();
+
+// ---------- Xử lý nộp form ----------
+const form = document.getElementById('form-dangky');
+const msg = document.getElementById('msg');
+const btn = document.getElementById('btn-submit');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  msg.className = 'form-msg';
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Đang nộp hồ sơ...';
+
+  try {
+    const fd = new FormData(form);
+    const data = Object.fromEntries(fd.entries());
+
+    // Gộp ngày/tháng/năm thành 1 chuỗi ngày sinh chuẩn (yyyy-MM-dd)
+    const ngay = String(data.ngaySinhNgay).padStart(2, '0');
+    const thang = String(data.ngaySinhThang).padStart(2, '0');
+    const nam = data.ngaySinhNam;
+    data.ngaySinh = `${nam}-${thang}-${ngay}`;
+    delete data.ngaySinhNgay; delete data.ngaySinhThang; delete data.ngaySinhNam;
+
+    // Đọc từng file giấy tờ (theo cấu hình động) thành base64
+    const danhSachFile = {};
+    const inputsGiayTo = khuGiayTo.querySelectorAll('input[type=file]');
+    for (const inp of inputsGiayTo) {
+      if (inp.files[0]) {
+        danhSachFile[inp.dataset.giayToId] = await docFileThanhBase64(inp.files[0]);
+      }
+    }
+
+    const ketQua = await goiApiPost('nopHoSo', {
+      hoSo: data,
+      danhSachFile: danhSachFile,
+    });
+
+    form.style.display = 'none';
+    hienThongBao(msg, 'ok', `Nộp hồ sơ thành công! Mã hồ sơ của bạn là:`);
+    const maBox = document.createElement('div');
+    maBox.className = 'ma-ho-so';
+    maBox.textContent = ketQua.maHoSo;
+    msg.after(maBox);
+    const hint = document.createElement('p');
+    hint.style.textAlign = 'center';
+    hint.style.marginTop = '14px';
+    hint.innerHTML = `Vui lòng lưu lại mã này để <a href="tracuu.html" style="color:var(--nuoc-sau); font-weight:700;">tra cứu tình trạng hồ sơ</a>.`;
+    maBox.after(hint);
+  } catch (err) {
+    hienThongBao(msg, 'err', 'Lỗi: ' + err.message);
+    btn.disabled = false;
+    btn.textContent = 'Nộp hồ sơ đăng ký';
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản trị tuyển sinh — TH Rạch Chèo</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a href="index.html" class="brand">
+      <span class="brand__badge">TH</span>
+      <span class="brand__text"><b>TH Rạch Chèo</b><span>Xã Nguyễn Việt Khái, Cà Mau</span></span>
+    </a>
+    <nav class="nav">
+      <a href="index.html">Trang chủ</a>
+      <a href="dangky.html">Đăng ký</a>
+      <a href="tracuu.html">Tra cứu hồ sơ</a>
+      <a href="admin.html" class="active">Quản trị</a>
+    </nav>
+  </div>
+</header>
+
+<section class="page-banner" data-banner-el>
+  <div class="page-banner__inner">
+    <span class="eyebrow">Quản trị</span>
+    <h1>Bảng điều khiển tuyển sinh</h1>
+  </div>
+</section>
+
+<!-- ĐĂNG NHẬP -->
+<div id="khu-dang-nhap" class="login-box">
+  <h2 style="font-family:var(--font-display); color:var(--nuoc-sau); margin-top:0;">Đăng nhập quản trị</h2>
+  <p style="color:var(--muc-nhat); font-size:14px;">Dành cho cán bộ nhà trường phụ trách xét duyệt hồ sơ tuyển sinh.</p>
+  <div id="msg-login" class="form-msg"></div>
+  <form id="form-login">
+    <div class="field">
+      <label>Mật khẩu quản trị</label>
+      <input type="text" name="matKhau" required placeholder="Nhập mật khẩu">
+    </div>
+    <button type="submit" class="btn btn--dat btn--full" id="btn-login">Đăng nhập</button>
+  </form>
+</div>
+
+<!-- BẢNG DUYỆT HỒ SƠ -->
+<section class="section" id="khu-quan-tri" style="display:none;">
+  <div class="section-head" style="text-align:left; max-width:none; margin-bottom:24px; display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px;">
+    <div>
+      <span class="eyebrow">Bảng điều khiển</span>
+      <h2 style="margin-bottom:0;">Danh sách hồ sơ đăng ký</h2>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <select id="loc-trang-thai" style="padding:10px 14px; border-radius:10px; border:1.5px solid var(--duong-vien); background:var(--trang);">
+        <option value="">Tất cả trạng thái</option>
+        <option>Chờ duyệt</option>
+        <option>Đã duyệt</option>
+        <option>Từ chối</option>
+      </select>
+      <button class="btn btn--vien" style="color:var(--nuoc-sau); border-color:var(--duong-vien);" id="btn-lam-moi">↻ Làm mới</button>
+    </div>
+  </div>
+
+  <div id="msg-admin" class="form-msg"></div>
+
+  <div class="card" style="margin-bottom:24px;">
+    <h3 style="margin-top:0;">📅 Thời gian tuyển sinh</h3>
+    <p style="color:var(--muc-nhat); font-size:13.5px; margin-top:0;">
+      Đặt ngày mở và đóng cổng đăng ký. Để trống nếu không muốn giới hạn. Ngoài khoảng thời gian này, phụ huynh sẽ không nộp được hồ sơ mới.
+    </p>
+    <div class="field-row">
+      <div class="field">
+        <label>Ngày mở tuyển sinh</label>
+        <input type="date" id="ngay-bat-dau-ts">
+      </div>
+      <div class="field">
+        <label>Ngày đóng tuyển sinh</label>
+        <input type="date" id="ngay-ket-thuc-ts">
+      </div>
+    </div>
+    <button class="btn btn--dat" id="btn-luu-thoi-gian-ts">Lưu thời gian tuyển sinh</button>
+  </div>
+
+  <div class="card" style="margin-bottom:24px;">
+    <h3 style="margin-top:0;">🖼️ Quản lý banner trang web</h3>
+    <p style="color:var(--muc-nhat); font-size:13.5px; margin-top:0;">
+      Kích thước ảnh khuyến nghị: <b>1600 × 500px</b> (tỉ lệ ngang ~3.2:1), định dạng JPG hoặc PNG, dung lượng dưới 5MB.
+      Banner sẽ tự động hiển thị trên Trang chủ, Đăng ký và Tra cứu.
+    </p>
+    <img id="banner-hien-tai" class="banner-preview" style="display:none;" alt="Banner hiện tại">
+    <div id="banner-chua-co" style="padding:16px; text-align:center; color:var(--muc-nhat); font-size:13.5px; border:1px dashed var(--duong-vien); border-radius:12px; margin-bottom:14px;">
+      Chưa có banner tuỳ chỉnh — trang web đang dùng banner mặc định.
+    </div>
+    <label class="file-drop" style="margin-bottom:10px;">
+      <input type="file" id="input-banner" accept="image/png,image/jpeg">
+      <div>📎 Nhấn để chọn ảnh banner mới</div>
+      <div class="ten-file" id="ten-file-banner"></div>
+    </label>
+    <button class="btn btn--dat" id="btn-cap-nhat-banner" disabled>Cập nhật banner</button>
+  </div>
+
+  <div class="card" style="margin-bottom:24px;">
+    <h3 style="margin-top:0;">📋 Quản lý giấy tờ đính kèm</h3>
+    <p style="color:var(--muc-nhat); font-size:13.5px; margin-top:0;">
+      Bật/tắt "Bắt buộc", ẩn/hiện từng loại giấy tờ, hoặc thêm loại giấy tờ mới cho form đăng ký.
+      Giấy khai sinh và Sổ hộ khẩu là 2 loại gốc — có thể ẩn nhưng không xoá được.
+    </p>
+    <div id="ds-giay-to" style="display:flex; flex-direction:column; gap:10px; margin-bottom:14px;"></div>
+    <div style="display:flex; gap:10px; margin-bottom:14px;">
+      <input type="text" id="ten-giay-to-moi" placeholder="Tên loại giấy tờ mới, VD: Giấy chứng nhận hộ nghèo" style="flex:1;">
+      <button class="btn btn--vien" style="color:var(--nuoc-sau); border-color:var(--duong-vien); white-space:nowrap;" id="btn-them-giay-to">+ Thêm</button>
+    </div>
+    <button class="btn btn--dat" id="btn-luu-giay-to">Lưu thay đổi</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Mã hồ sơ</th>
+          <th>Học sinh</th>
+          <th>Ngày sinh</th>
+          <th>Phụ huynh / SĐT</th>
+          <th>Khu vực</th>
+          <th>Giấy tờ</th>
+          <th>Trạng thái</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody id="bang-ho-so">
+        <tr><td colspan="8" style="text-align:center; padding:30px;">Đang tải dữ liệu...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <div><b data-ten-truong>Trường Tiểu học Rạch Chèo</b><br>Xã Nguyễn Việt Khái, tỉnh Cà Mau</div>
+    <div>Cổng tuyển sinh trực tuyến · Năm học <span data-nam-hoc>2026 - 2027</span></div>
+  </div>
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/main.js"></script>
+<script>
+let PHIEN_DANG_NHAP = sessionStorage.getItem('rc_admin_token') || null;
+
+const khuLogin = document.getElementById('khu-dang-nhap');
+const khuAdmin = document.getElementById('khu-quan-tri');
+const formLogin = document.getElementById('form-login');
+const msgLogin = document.getElementById('msg-login');
+const btnLogin = document.getElementById('btn-login');
+const bangHoSo = document.getElementById('bang-ho-so');
+const msgAdmin = document.getElementById('msg-admin');
+const locTrangThai = document.getElementById('loc-trang-thai');
+
+function moGiaoDienAdmin() {
+  khuLogin.style.display = 'none';
+  khuAdmin.style.display = 'block';
+  taiDanhSach();
+  taiBannerHienTai();
+  taiCauHinhGiayTo();
+  taiThoiGianTuyenSinh();
+}
+
+// ---------- THỜI GIAN TUYỂN SINH ----------
+const ngayBatDauInput = document.getElementById('ngay-bat-dau-ts');
+const ngayKetThucInput = document.getElementById('ngay-ket-thuc-ts');
+const btnLuuThoiGian = document.getElementById('btn-luu-thoi-gian-ts');
+
+async function taiThoiGianTuyenSinh() {
+  try {
+    const kq = await goiApiGet('layThoiGianTuyenSinh', {});
+    ngayBatDauInput.value = kq.ngayBatDau || '';
+    ngayKetThucInput.value = kq.ngayKetThuc || '';
+  } catch (err) {
+    hienThongBao(msgAdmin, 'err', 'Lỗi tải thời gian tuyển sinh: ' + err.message);
+  }
+}
+
+btnLuuThoiGian.addEventListener('click', async () => {
+  btnLuuThoiGian.disabled = true;
+  btnLuuThoiGian.innerHTML = '<span class="loader"></span> Đang lưu...';
+  try {
+    await goiApiPost('capNhatThoiGianTuyenSinh', {
+      token: PHIEN_DANG_NHAP,
+      ngayBatDau: ngayBatDauInput.value,
+      ngayKetThuc: ngayKetThucInput.value,
+    });
+    hienThongBao(msgAdmin, 'ok', 'Đã lưu thời gian tuyển sinh.');
+  } catch (err) {
+    hienThongBao(msgAdmin, 'err', 'Lỗi lưu thời gian tuyển sinh: ' + err.message);
+  } finally {
+    btnLuuThoiGian.disabled = false;
+    btnLuuThoiGian.textContent = 'Lưu thời gian tuyển sinh';
+  }
+});
+
+// ---------- QUẢN LÝ GIẤY TỜ ĐÍNH KÈM ----------
+const dsGiayToBox = document.getElementById('ds-giay-to');
+const tenGiayToMoi = document.getElementById('ten-giay-to-moi');
+const btnThemGiayTo = document.getElementById('btn-them-giay-to');
+const btnLuuGiayTo = document.getElementById('btn-luu-giay-to');
+let cauHinhGiayTo = [];
+
+async function taiCauHinhGiayTo() {
+  try {
+    const kq = await goiApiGet('layDanhSachGiayTo', {});
+    cauHinhGiayTo = kq.danhSach || [];
+    veDanhSachGiayTo();
+  } catch (err) {
+    hienThongBao(msgAdmin, 'err', 'Lỗi tải danh sách giấy tờ: ' + err.message);
+  }
+}
+
+function veDanhSachGiayTo() {
+  dsGiayToBox.innerHTML = cauHinhGiayTo.map((gt, i) => `
+    <div class="dong-giay-to">
+      <span class="ten-giay-to">${gt.ten} ${gt.coDinh ? '<span class="badge-co-dinh">(gốc)</span>' : ''}</span>
+      <label><input type="checkbox" data-idx="${i}" data-truong="batBuoc" ${gt.batBuoc ? 'checked' : ''}> Bắt buộc</label>
+      <label><input type="checkbox" data-idx="${i}" data-truong="an" ${gt.an ? 'checked' : ''}> Ẩn khỏi form</label>
+      ${!gt.coDinh ? `<button class="mini-btn mini-btn--tuchoi" data-xoa="${i}">Xoá</button>` : ''}
+    </div>
+  `).join('');
+
+  dsGiayToBox.querySelectorAll('input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      cauHinhGiayTo[cb.dataset.idx][cb.dataset.truong] = cb.checked;
+    });
+  });
+  dsGiayToBox.querySelectorAll('[data-xoa]').forEach(b => {
+    b.addEventListener('click', () => {
+      cauHinhGiayTo.splice(Number(b.dataset.xoa), 1);
+      veDanhSachGiayTo();
+    });
+  });
+}
+
+btnThemGiayTo.addEventListener('click', () => {
+  const ten = tenGiayToMoi.value.trim();
+  if (!ten) return;
+  const id = 'gt_' + Date.now();
+  cauHinhGiayTo.push({ id, ten, batBuoc: false, an: false, coDinh: false });
+  tenGiayToMoi.value = '';
+  veDanhSachGiayTo();
+});
+
+btnLuuGiayTo.addEventListener('click', async () => {
+  btnLuuGiayTo.disabled = true;
+  btnLuuGiayTo.innerHTML = '<span class="loader"></span> Đang lưu...';
+  try {
+    await goiApiPost('capNhatDanhSachGiayTo', { token: PHIEN_DANG_NHAP, danhSach: cauHinhGiayTo });
+    hienThongBao(msgAdmin, 'ok', 'Đã lưu cấu hình giấy tờ. Form đăng ký sẽ áp dụng ngay.');
+  } catch (err) {
+    hienThongBao(msgAdmin, 'err', 'Lỗi lưu cấu hình: ' + err.message);
+  } finally {
+    btnLuuGiayTo.disabled = false;
+    btnLuuGiayTo.textContent = 'Lưu thay đổi';
+  }
+});
+
+// ---------- QUẢN LÝ BANNER ----------
+const anhBannerHienTai = document.getElementById('banner-hien-tai');
+const bannerChuaCo = document.getElementById('banner-chua-co');
+const inputBanner = document.getElementById('input-banner');
+const tenFileBanner = document.getElementById('ten-file-banner');
+const btnCapNhatBanner = document.getElementById('btn-cap-nhat-banner');
+
+async function taiBannerHienTai() {
+  try {
+    const kq = await goiApiGet('layBanner', {});
+    if (kq.bannerUrl) {
+      anhBannerHienTai.src = kq.bannerUrl;
+      anhBannerHienTai.style.display = 'block';
+      bannerChuaCo.style.display = 'none';
+    } else {
+      anhBannerHienTai.style.display = 'none';
+      bannerChuaCo.style.display = 'block';
+    }
+  } catch (err) {
+    console.warn('Không tải được banner hiện tại:', err.message);
+  }
+}
+
+inputBanner.addEventListener('change', () => {
+  const f = inputBanner.files[0];
+  tenFileBanner.textContent = f ? `Đã chọn: ${f.name}` : '';
+  btnCapNhatBanner.disabled = !f;
+});
+
+btnCapNhatBanner.addEventListener('click', async () => {
+  const f = inputBanner.files[0];
+  if (!f) return;
+  btnCapNhatBanner.disabled = true;
+  btnCapNhatBanner.innerHTML = '<span class="loader"></span> Đang tải ảnh lên...';
+  try {
+    const anh = await docFileThanhBase64(f);
+    const kq = await goiApiPost('capNhatBanner', { token: PHIEN_DANG_NHAP, anhBanner: anh });
+    hienThongBao(msgAdmin, 'ok', 'Cập nhật banner thành công! Banner mới sẽ hiện trên các trang sau vài giây.');
+    anhBannerHienTai.src = kq.bannerUrl;
+    anhBannerHienTai.style.display = 'block';
+    bannerChuaCo.style.display = 'none';
+    inputBanner.value = '';
+    tenFileBanner.textContent = '';
+  } catch (err) {
+    hienThongBao(msgAdmin, 'err', 'Lỗi cập nhật banner: ' + err.message);
+  } finally {
+    btnCapNhatBanner.disabled = false;
+    btnCapNhatBanner.textContent = 'Cập nhật banner';
+  }
+});
+
+if (PHIEN_DANG_NHAP) moGiaoDienAdmin();
+
+formLogin.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  msgLogin.className = 'form-msg';
+  btnLogin.disabled = true;
+  btnLogin.innerHTML = '<span class="loader"></span> Đang kiểm tra...';
+  try {
+    const matKhau = formLogin.matKhau.value;
+    const kq = await goiApiPost('dangNhap', { matKhau });
+    PHIEN_DANG_NHAP = kq.token;
+    sessionStorage.setItem('rc_admin_token', PHIEN_DANG_NHAP);
+    moGiaoDienAdmin();
+  } catch (err) {
+    hienThongBao(msgLogin, 'err', 'Sai mật khẩu hoặc lỗi kết nối: ' + err.message);
+  } finally {
+    btnLogin.disabled = false;
+    btnLogin.textContent = 'Đăng nhập';
+  }
+});
+
+function layGiayToKhacHtml(raw) {
+  if (!raw) return '';
+  try {
+    const ds = JSON.parse(raw);
+    if (!Array.isArray(ds) || !ds.length) return '';
+    return '<br>' + ds.map(g => `<a href="${g.link}" target="_blank">${g.ten}</a>`).join('<br>');
+  } catch (e) {
+    return '';
+  }
+}
+
+async function taiDanhSach() {
+  bangHoSo.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px;"><span class="loader"></span> Đang tải...</td></tr>`;
+  try {
+    const kq = await goiApiGet('danhSachAdmin', {
+      token: PHIEN_DANG_NHAP,
+      trangThai: locTrangThai.value,
+    });
+    if (!kq.danhSach.length) {
+      bangHoSo.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--muc-nhat);">Chưa có hồ sơ nào.</td></tr>`;
+      return;
+    }
+    bangHoSo.innerHTML = kq.danhSach.map(hs => `
+      <tr>
+        <td><b>${hs.maHoSo}</b></td>
+        <td>${hs.hoTenHocSinh}<br><small style="color:var(--muc-nhat)">${hs.gioiTinh}</small></td>
+        <td>${hs.ngaySinh}</td>
+        <td>${hs.hoTenCha || hs.hoTenMe || '—'}<br><small>${hs.sdtLienHe}</small></td>
+        <td>${hs.khuVuc}</td>
+        <td>
+          ${hs.linkGiayKhaiSinh ? `<a href="${hs.linkGiayKhaiSinh}" target="_blank">Khai sinh</a><br>` : ''}
+          ${hs.linkGiayCuTru ? `<a href="${hs.linkGiayCuTru}" target="_blank">Cư trú</a>` : ''}
+          ${layGiayToKhacHtml(hs.linkGiayToKhac)}
+        </td>
+        <td>${badgeTrangThai(hs.trangThai)}</td>
+        <td class="row-actions">
+          <button class="mini-btn mini-btn--duyet" data-ma="${hs.maHoSo}" data-hanh-dong="Đã duyệt">Duyệt</button>
+          <button class="mini-btn mini-btn--tuchoi" data-ma="${hs.maHoSo}" data-hanh-dong="Từ chối">Từ chối</button>
+        </td>
+      </tr>
+    `).join('');
+
+    bangHoSo.querySelectorAll('.mini-btn').forEach(b => {
+      b.addEventListener('click', () => capNhatTrangThai(b.dataset.ma, b.dataset.hanhDong));
+    });
+  } catch (err) {
+    hienThongBao(msgAdmin, 'err', 'Lỗi tải danh sách: ' + err.message);
+  }
+}
+
+async function capNhatTrangThai(maHoSo, trangThai) {
+  try {
+    await goiApiPost('capNhatTrangThai', { token: PHIEN_DANG_NHAP, maHoSo, trangThai });
+    taiDanhSach();
+  } catch (err) {
+    hienThongBao(msgAdmin, 'err', 'Lỗi cập nhật: ' + err.message);
+  }
+}
+
+locTrangThai.addEventListener('change', taiDanhSach);
+document.getElementById('btn-lam-moi').addEventListener('click', taiDanhSach);
+</script>
+</body>
+</html>
