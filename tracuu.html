@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tra cứu hồ sơ — TH Rạch Chèo</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a href="index.html" class="brand">
+      <span class="brand__badge">TH</span>
+      <span class="brand__text"><b>TH Rạch Chèo</b><span>Xã Nguyễn Việt Khái, Cà Mau</span></span>
+    </a>
+    <nav class="nav">
+      <a href="index.html">Trang chủ</a>
+      <a href="dangky.html">Đăng ký</a>
+      <a href="tracuu.html" class="active">Tra cứu hồ sơ</a>
+      <a href="admin.html">Quản trị</a>
+    </nav>
+  </div>
+</header>
+
+<section class="page-banner" data-banner-el>
+  <div class="page-banner__inner">
+    <span class="eyebrow">Tra cứu</span>
+    <h1>Tra cứu tình trạng hồ sơ</h1>
+    <p>Nhập mã hồ sơ hoặc số điện thoại đã đăng ký để xem tình trạng xét duyệt.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="form-wrap" style="max-width:560px;">
+    <div id="msg" class="form-msg"></div>
+    <form id="form-tracuu">
+      <div class="field">
+        <label>Mã hồ sơ hoặc số điện thoại <span class="req">*</span></label>
+        <input type="text" name="tuKhoa" required placeholder="VD: RC-2026-0001 hoặc 0912345678">
+      </div>
+      <button type="submit" class="btn btn--dat btn--full" id="btn-tracuu">Tra cứu</button>
+    </form>
+
+    <div id="ket-qua" style="margin-top:26px; display:none;">
+      <div class="table-wrap">
+        <table>
+          <tbody id="bang-ket-qua"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <div><b data-ten-truong>Trường Tiểu học Rạch Chèo</b><br>Xã Nguyễn Việt Khái, tỉnh Cà Mau</div>
+    <div>Cổng tuyển sinh trực tuyến · Năm học <span data-nam-hoc>2026 - 2027</span></div>
+  </div>
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/main.js"></script>
+<script>
+const form = document.getElementById('form-tracuu');
+const msg = document.getElementById('msg');
+const btn = document.getElementById('btn-tracuu');
+const ketQuaBox = document.getElementById('ket-qua');
+const bang = document.getElementById('bang-ket-qua');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  msg.className = 'form-msg';
+  ketQuaBox.style.display = 'none';
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Đang tra cứu...';
+
+  try {
+    const tuKhoa = form.tuKhoa.value.trim();
+    const ds = await goiApiGet('traCuu', { tuKhoa });
+
+    if (!ds.danhSach || ds.danhSach.length === 0) {
+      hienThongBao(msg, 'err', 'Không tìm thấy hồ sơ nào khớp với thông tin đã nhập.');
+    } else {
+      bang.innerHTML = ds.danhSach.map(hs => `
+        <tr>
+          <td><b>${hs.maHoSo}</b></td>
+          <td>${hs.hoTenHocSinh}</td>
+          <td>${hs.ngaySinh}</td>
+          <td>${badgeTrangThai(hs.trangThai)}</td>
+          <td>${hs.ghiChuDuyet || '—'}</td>
+        </tr>
+      `).join('');
+      ketQuaBox.style.display = 'block';
+    }
+  } catch (err) {
+    hienThongBao(msg, 'err', 'Lỗi: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Tra cứu';
+  }
+});
+</script>
+</body>
+</html>
